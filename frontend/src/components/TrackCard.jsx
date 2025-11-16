@@ -1,5 +1,5 @@
 // frontend/src/components/TrackCard.jsx
-export function TrackCard({ track }) {
+export function TrackCard({ track, index, onPlay, isActive }) {
   const {
     name,
     artist,
@@ -11,7 +11,7 @@ export function TrackCard({ track }) {
   const scorePct = Math.round(score * 100);
 
   return (
-    <article className="track-card">
+    <article className={`track-card ${isActive ? "track-card--active" : ""}`}>
       {artwork_url && (
         <img
           className="track-art"
@@ -24,16 +24,18 @@ export function TrackCard({ track }) {
         <h3 className="track-title">{name}</h3>
         <p className="track-artist">{artist}</p>
         <p className="track-score">Similarity: {scorePct}%</p>
-        {preview_url && (
-          <audio
-            className="track-audio"
-            controls
-            preload="none"
-            src={preview_url}
-          >
-            Your browser does not support the audio element.
-          </audio>
-        )}
+
+        <div className="track-actions">
+          {preview_url && (
+            <button
+              type="button"
+              className="track-play-btn"
+              onClick={() => onPlay(index)}
+            >
+              {isActive ? "Playing in mini player" : "Play in mini player"}
+            </button>
+          )}
+        </div>
       </div>
     </article>
   );

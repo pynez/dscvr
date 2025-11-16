@@ -3,7 +3,7 @@ export function Layout({ children }) {
   return (
     <div className="app-root">
       <header className="app-header">
-        <h1 className="app-title">Museek</h1>
+        <h1 className="app-title">DSCVR</h1>
         <p className="app-subtitle">
           Type an R&amp;B track you love and discover more songs with a similar vibe.
         </p>

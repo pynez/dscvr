@@ -1,35 +1,57 @@
-import { useState } from 'react'
-import reactLogo from './assets/react.svg'
-import viteLogo from '/vite.svg'
-import './App.css'
+// frontend/src/App.jsx
+import "./styles/globals.css";
+import { Layout } from "./components/Layout";
+import { SearchBar } from "./components/SearchBar";
+import { TrackCard } from "./components/TrackCard";
+import { useRecommendations } from "./hooks/useRecommendations";
 
 function App() {
-  const [count, setCount] = useState(0)
+  const {
+    query,
+    setQuery,
+    submit,
+    matchedTrack,
+    recommendations,
+    isLoading,
+    error,
+  } = useRecommendations();
 
   return (
-    <>
-      <div>
-        <a href="https://vite.dev" target="_blank">
-          <img src={viteLogo} className="logo" alt="Vite logo" />
-        </a>
-        <a href="https://react.dev" target="_blank">
-          <img src={reactLogo} className="logo react" alt="React logo" />
-        </a>
-      </div>
-      <h1>Vite + React</h1>
-      <div className="card">
-        <button onClick={() => setCount((count) => count + 1)}>
-          count is {count}
-        </button>
-        <p>
-          Edit <code>src/App.jsx</code> and save to test HMR
-        </p>
-      </div>
-      <p className="read-the-docs">
-        Click on the Vite and React logos to learn more
-      </p>
-    </>
-  )
+    <Layout>
+      <SearchBar
+        initialQuery={query}
+        onSubmit={submit}
+        isLoading={isLoading}
+      />
+
+      {error && <p className="error-text">{error}</p>}
+
+      {matchedTrack && (
+        <section className="matched-section">
+          <h2>You asked for:</h2>
+          <p className="matched-track">
+            <strong>{matchedTrack.title}</strong> — {matchedTrack.artist}
+          </p>
+        </section>
+      )}
+
+      <section className="results-section">
+        {isLoading && <p className="dim-text">Crunching vibes…</p>}
+
+        {!isLoading && !recommendations.length && !error && (
+          <p className="dim-text">
+            Try searching for a track to see recommendations.
+          </p>
+        )}
+
+        <div className="results-grid">
+          {recommendations.map((track) => (
+            <TrackCard key={`${track.row_index}-${track.name}`} track={track} />
+          ))}
+        </div>
+      </section>
+    </Layout>
+  );
 }
 
-export default App
+export default App;

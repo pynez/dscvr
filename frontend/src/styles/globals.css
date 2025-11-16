@@ -1,4 +1,9 @@
 :root {
+  color-scheme: dark light;
+}
+
+/* Dark theme (current look) */
+:root[data-theme="dark"] {
   --bg: #050816;
   --bg-elevated: #0b1020;
   --accent: #8b5cf6;
@@ -9,6 +14,20 @@
   --radius-lg: 18px;
   --radius-xl: 24px;
   --shadow-soft: 0 18px 45px rgba(15, 23, 42, 0.8);
+}
+
+/* Light theme */
+:root[data-theme="light"] {
+  --bg: #f3f4f6;
+  --bg-elevated: #ffffff;
+  --accent: #8b5cf6;
+  --accent-soft: rgba(139, 92, 246, 0.12);
+  --text: #0f172a;
+  --muted: #6b7280;
+  --border: rgba(148, 163, 184, 0.6);
+  --radius-lg: 18px;
+  --radius-xl: 24px;
+  --shadow-soft: 0 10px 25px rgba(15, 23, 42, 0.12);
 }
 
 *,

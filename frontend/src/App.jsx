@@ -6,11 +6,14 @@ import { SearchBar } from "./components/SearchBar";
 import { TrackCard } from "./components/TrackCard";
 import { NowPlayingBar } from "./components/NowPlayingBar";
 import { useRecommendations } from "./hooks/useRecommendations";
+import { useTheme } from "./hooks/useTheme";
 
 function App() {
+  const { theme, toggleTheme } = useTheme();
+
   const {
     query,
-    setQuery,
+    setQuery, // unused for now but available
     submit,
     matchedTrack,
     recommendations,
@@ -20,8 +23,6 @@ function App() {
 
   const [currentIndex, setCurrentIndex] = useState(null);
 
-  // Whenever recommendations change (new search), reset currentIndex
-  // You can tweak this later if you want to auto-play the first result.
   useMemo(() => {
     setCurrentIndex(null);
   }, [recommendations]);
@@ -53,7 +54,7 @@ function App() {
   const hasNext = recommendations.length > 1 && currentIndex !== null;
 
   return (
-    <Layout>
+    <Layout theme={theme} onToggleTheme={toggleTheme}>
       <SearchBar
         initialQuery={query}
         onSubmit={submit}
@@ -93,7 +94,6 @@ function App() {
         </div>
       </section>
 
-      {/* Mini player pinned at the bottom */}
       <NowPlayingBar
         track={currentTrack}
         hasPrev={hasPrev}

@@ -203,6 +203,131 @@ body {
   color: var(--muted);
 }
 
+.now-playing {
+  position: sticky;
+  bottom: 0;
+  left: 0;
+  right: 0;
+  margin-top: 1.5rem;
+  padding: 0.6rem 0.9rem;
+  border-radius: 999px;
+  background: radial-gradient(circle at top left, #4b5563 0, #020617 55%);
+  border: 1px solid rgba(148, 163, 184, 0.5);
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 0.75rem;
+  backdrop-filter: blur(18px);
+}
+
+.now-playing-info {
+  display: flex;
+  align-items: center;
+  gap: 0.75rem;
+  min-width: 0;
+}
+
+.now-playing-art {
+  width: 40px;
+  height: 40px;
+  border-radius: 12px;
+  object-fit: cover;
+}
+
+.now-playing-text {
+  display: flex;
+  flex-direction: column;
+  min-width: 0;
+}
+
+.now-playing-label {
+  font-size: 0.7rem;
+  text-transform: uppercase;
+  letter-spacing: 0.12em;
+  color: var(--muted);
+}
+
+.now-playing-title {
+  font-size: 0.9rem;
+  font-weight: 600;
+  white-space: nowrap;
+  text-overflow: ellipsis;
+  overflow: hidden;
+}
+
+.now-playing-artist {
+  font-size: 0.8rem;
+  color: var(--muted);
+  white-space: nowrap;
+  text-overflow: ellipsis;
+  overflow: hidden;
+}
+
+.now-playing-controls {
+  display: flex;
+  align-items: center;
+  gap: 0.4rem;
+}
+
+.np-btn {
+  border: none;
+  border-radius: 999px;
+  padding: 0.25rem 0.55rem;
+  font-size: 1rem;
+  cursor: pointer;
+  background: rgba(15, 23, 42, 0.8);
+  color: var(--text);
+}
+
+.np-btn-main {
+  background: linear-gradient(135deg, #8b5cf6, #ec4899);
+}
+
+.np-btn:disabled {
+  opacity: 0.5;
+  cursor: default;
+}
+
+.now-playing-audio {
+  display: none;
+}
+
+/* Highlight active card */
+
+.track-card--active {
+  border-color: var(--accent);
+  box-shadow: 0 0 0 1px var(--accent-soft), var(--shadow-soft);
+}
+
+.track-actions {
+  margin-top: 0.35rem;
+}
+
+.track-play-btn {
+  border: none;
+  border-radius: 999px;
+  padding: 0.35rem 0.75rem;
+  font-size: 0.78rem;
+  font-weight: 500;
+  background: rgba(139, 92, 246, 0.12);
+  color: var(--accent);
+  cursor: pointer;
+}
+
+.track-play-btn:hover {
+  background: rgba(139, 92, 246, 0.2);
+}
+
+@media (max-width: 640px) {
+  .now-playing {
+    flex-direction: column;
+    align-items: stretch;
+    border-radius: 20px;
+  }
+  .now-playing-controls {
+    justify-content: center;
+  }
+}
 /* Utilities */
 
 .error-text {

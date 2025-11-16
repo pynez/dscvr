@@ -1,6 +1,8 @@
 # src/recsys/service/api.py
 from __future__ import annotations
 
+from fastapi.middleware.cors import CORSMiddleware
+
 from fastapi import FastAPI, HTTPException
 
 from src.recsys.recommenders.cosine import CosineRecommender
@@ -15,6 +17,18 @@ app = FastAPI(
     title="Music Recommendation API",
     version="0.1.0",
     description="Text/tag-based music recommender built on Last.fm + iTunes data.",
+)
+
+origins = [
+    "http://localhost:5173",  # Vite dev server
+]
+
+app.add_middleware(
+    CORSMiddleware,
+    allow_origins=origins,
+    allow_credentials=True,
+    allow_methods=["*"],
+    allow_headers=["*"],
 )
 
 # Load artifacts once at startup

@@ -4,9 +4,9 @@ from __future__ import annotations
 from fastapi.middleware.cors import CORSMiddleware
 
 from fastapi import FastAPI, HTTPException
-
+from pydantic import BaseModel
 from src.recsys.recommenders.cosine import CosineRecommender
-from src.recsys.io import load_id_map, fuzzy_row_index
+from src.recsys.io import load_id_map, fuzzy_row_index, build_search_index, search_tracks
 from src.recsys.service.schemas import (
     RecommendRequest,
     RecommendResponse,
@@ -34,11 +34,34 @@ app.add_middleware(
 # Load artifacts once at startup
 recommender = CosineRecommender()
 ID_MAP = load_id_map()
+SEARCH_INDEX = build_search_index(ID_MAP)
 
 
 @app.get("/health")
 def health():
     return {"ok": True, "tracks": len(ID_MAP)}
+
+
+class SearchResult(BaseModel):
+    row_index: int
+    title: str
+    artist: str
+    score: float
+
+class SearchResponse(BaseModel):
+    query: str
+    results: list[SearchResult]
+
+
+@app.get("/search", response_model=SearchResponse)
+def search(query: str, limit: int = 5):
+    if not query.strip():
+        return SearchResponse(query=query, results=[])
+    matches = search_tracks(query, SEARCH_INDEX, limit=limit)
+    return SearchResponse(
+        query=query,
+        results=[SearchResult(**m) for m in matches],
+    )
 
 
 @app.post("/recommend", response_model=RecommendResponse)

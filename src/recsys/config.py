@@ -7,6 +7,7 @@ DATA = ROOT / "data"
 RAW = DATA / "raw"
 PROC = DATA / "processed"
 ART = DATA / "artifacts"
+SEEDS = DATA / "seeds"
 for p in (RAW, PROC, ART):
     p.mkdir(parents=True, exist_ok=True)
 

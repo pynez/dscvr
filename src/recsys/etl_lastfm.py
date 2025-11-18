@@ -4,8 +4,10 @@ from dataclasses import dataclass
 from typing import List, Optional
 import pandas as pd
 from dotenv import load_dotenv
-
-from src.recsys.config import PROC
+import json
+import requests
+from pathlib import Path
+from src.recsys.config import PROC, SEEDS
 
 LASTFM = "https://ws.audioscrobbler.com/2.0/"
 ITUNES = "https://itunes.apple.com/search"
@@ -50,6 +52,11 @@ def _lastfm(params: dict) -> dict:
         snippet = (r.text or "")[:300]
         raise RuntimeError(f"Last.fm returned non-JSON (Content-Type={ctype}). First 300 chars:\n{snippet}")
 
+    if not r.text.strip():
+        raise RuntimeError(
+            f"Last.fm returned empty body for params={params}. "
+            f"Status={r.status_code}, headers={r.headers}"
+        )
     data = r.json()
 
     # Last.fm sometimes returns an 'error' field in JSON
@@ -92,6 +99,58 @@ def track_get_tags(title: str, artist: str, kind="track") -> list[str]:
         return [t.get("name","") for t in taglist[:20]]
     except Exception:
         return []
+    
+def load_seed_groups(seed_dir: Path | None = None) -> dict[str, list[tuple[str, str]]]:
+    """
+    Load seed tracks from JSON files in data/seeds.
+
+    Each JSON file should be an array of objects:
+      { "title": "...", "artist": "..." }
+
+    Returns:
+      { "rnb": [("Snooze", "SZA"), ...],
+        "alt_rnb": [...],
+        ... }
+    """
+    seed_dir = seed_dir or SEEDS
+    groups: dict[str, list[tuple[str, str]]] = {}
+
+    if not seed_dir.exists():
+        raise RuntimeError(f"Seed directory does not exist: {seed_dir}")
+
+    for path in sorted(seed_dir.glob("*.json")):
+        group_name = path.stem  # e.g., "rnb", "alt_rnb"
+        try:
+            with path.open() as f:
+                raw = json.load(f)
+        except Exception as e:
+            print(f"[load_seed_groups] ERROR reading {path}: {e}")
+            continue
+
+        seeds: list[tuple[str, str]] = []
+        # Accept both [{title,artist}, ...] and [["title","artist"], ...]
+        if isinstance(raw, list):
+            for item in raw:
+                if isinstance(item, dict):
+                    title = item.get("title")
+                    artist = item.get("artist")
+                elif isinstance(item, (list, tuple)) and len(item) >= 2:
+                    title, artist = item[0], item[1]
+                else:
+                    continue
+                if title and artist:
+                    seeds.append((str(title), str(artist)))
+
+        if seeds:
+            groups[group_name] = seeds
+            print(f"[load_seed_groups] {group_name}: loaded {len(seeds)} seeds from {path}")
+        else:
+            print(f"[load_seed_groups] WARNING: no valid seeds in {path}")
+
+    if not groups:
+        raise RuntimeError(f"No seed JSON files found in {seed_dir}")
+
+    return groups
 
 def collect_from_seeds(seeds: list[tuple[str,str]], seed_label="seed:rnb") -> pd.DataFrame:
     rows: List[TrackRow] = []
@@ -123,16 +182,87 @@ def collect_from_seeds(seeds: list[tuple[str,str]], seed_label="seed:rnb") -> pd
     df = pd.DataFrame([r.__dict__ for r in rows]).drop_duplicates(subset=["title","artist"])
     return df
 
-def build_lastfm_dataset(out_path: str = str(PROC / "tracks_lastfm.parquet")) -> str:
-    # Start tiny (R&B); you can expand later or load from a config file
-    rnb_seeds = [
-        ("Snooze","SZA"),
-        ("CUFF IT","Beyoncé"),
-        ("Blinding Lights","The Weeknd"),
-        ("Bad Habit","Steve Lacy"),
-        ("Leave The Door Open","Bruno Mars")
-    ]
-    df = collect_from_seeds(rnb_seeds, seed_label="seed:rnb")
-    df.to_parquet(out_path, index=False)
-    print(f"✅ Wrote {len(df)} rows → {out_path}")
-    return out_path
+def build_lastfm_dataset(
+    seed_dir: Path | None = None,
+    out_path: str | Path = PROC / "tracks_lastfm.parquet",
+) -> str:
+    """
+    Build a unified Last.fm-based catalog from all seed JSON files.
+
+    - Reads seed groups from data/seeds/*.json
+    - For each group, calls collect_from_seeds(...)
+    - Adds a 'seed_group' column with the JSON filename stem (e.g. 'rnb')
+    - Concatenates all groups and drops duplicate (title, artist) combos
+    """
+    seed_dir = seed_dir or SEEDS
+    groups = load_seed_groups(seed_dir)
+
+    frames: list[pd.DataFrame] = []
+
+    for group_name, seeds in groups.items():
+        print(f"[build_lastfm_dataset] collecting from group '{group_name}' with {len(seeds)} seeds")
+        if not seeds:
+            continue
+
+        # collect_from_seeds is your existing function that uses track.getSimilar, tags, iTunes, etc.
+        df_group = collect_from_seeds(seeds, seed_label=f"seed:{group_name}")
+        df_group = df_group.copy()
+        df_group["seed_group"] = group_name
+        frames.append(df_group)
+
+    if not frames:
+        raise RuntimeError("No data collected from any seed groups")
+
+    df_all = pd.concat(frames, ignore_index=True)
+
+    before = len(df_all)
+    df_all = df_all.drop_duplicates(subset=["title", "artist"])
+    after = len(df_all)
+    print(f"[build_lastfm_dataset] deduped from {before} to {after} rows")
+
+    out_path = Path(out_path)
+    out_path.parent.mkdir(parents=True, exist_ok=True)
+    df_all.to_parquet(out_path, index=False)
+    print(f"✅ Wrote {len(df_all)} rows → {out_path}")
+    return str(out_path)
+
+def tag_get_top_tracks(tag: str, limit: int = 100) -> list[dict]:
+    """
+    Get top tracks for a given Last.fm tag.
+    Each item is a dict with 'title' and 'artist'.
+    """
+    # NOTE: method name is usually 'tag.gettoptracks' in examples,
+    # but Last.fm is case-insensitive here. We'll be safe either way.
+    res = _lastfm({
+        "method": "tag.gettoptracks",
+        "tag": tag,
+        "limit": limit,
+        "autocorrect": 1,
+    })
+
+    top = res.get("toptracks") or res.get("topTracks") or {}
+    tracks = top.get("track") or top.get("tracks") or []
+
+    # Some Last.fm responses use a single dict instead of a list when limit=1
+    if isinstance(tracks, dict):
+        tracks = [tracks]
+
+    out: list[dict] = []
+    for t in tracks:
+        if not isinstance(t, dict):
+            continue
+        name = t.get("name") or ""
+        artist_obj = t.get("artist") or {}
+        if isinstance(artist_obj, dict):
+            artist_name = artist_obj.get("name") or ""
+        else:
+            artist_name = str(artist_obj) if artist_obj else ""
+        if name and artist_name:
+            out.append({"title": name, "artist": artist_name})
+
+    if not out:
+        # Helpful debug so we can see if a tag is just bad
+        print(f"[tag_get_top_tracks] WARNING: no top tracks for tag '{tag}'. "
+              f"toptracks keys={list(top.keys()) if isinstance(top, dict) else type(top)}")
+
+    return out

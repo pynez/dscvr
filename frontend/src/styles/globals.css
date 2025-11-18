@@ -347,6 +347,108 @@ body {
     justify-content: center;
   }
 }
+
+/* Favorites */
+
+.favorites-section {
+  margin-top: 2rem;
+}
+
+.favorites-header {
+  display: flex;
+  align-items: baseline;
+  justify-content: space-between;
+  gap: 0.5rem;
+}
+
+.favorites-header h2 {
+  font-size: 1rem;
+  margin: 0;
+}
+
+.favorites-count {
+  font-size: 0.8rem;
+  color: var(--muted);
+}
+
+.favorites-list {
+  list-style: none;
+  margin: 0.75rem 0 0;
+  padding: 0;
+  display: flex;
+  flex-direction: column;
+  gap: 0.35rem;
+}
+
+.favorites-item {
+  display: flex;
+  align-items: center;
+  gap: 0.6rem;
+  padding: 0.4rem 0.6rem;
+  border-radius: 999px;
+  background-color: var(--bg-elevated);
+  border: 1px solid rgba(148, 163, 184, 0.25);
+}
+
+.favorites-item--active {
+  border-color: var(--accent);
+  box-shadow: 0 0 0 1px var(--accent-soft);
+}
+
+.favorites-play {
+  border: none;
+  background: rgba(148, 163, 184, 0.25);
+  border-radius: 999px;
+  padding: 0.25rem 0.5rem;
+  font-size: 0.8rem;
+  cursor: pointer;
+}
+
+.favorites-meta {
+  flex: 1;
+  min-width: 0;
+}
+
+.favorites-title {
+  font-size: 0.88rem;
+  white-space: nowrap;
+  text-overflow: ellipsis;
+  overflow: hidden;
+}
+
+.favorites-artist {
+  font-size: 0.75rem;
+  color: var(--muted);
+  white-space: nowrap;
+  text-overflow: ellipsis;
+  overflow: hidden;
+}
+
+.favorites-heart {
+  border: none;
+  background: transparent;
+  cursor: pointer;
+  font-size: 0.95rem;
+}
+
+/* Track card favorites button */
+
+.track-actions {
+  margin-top: 0.35rem;
+  display: flex;
+  align-items: center;
+  gap: 0.35rem;
+}
+
+.track-fav-btn {
+  border: none;
+  border-radius: 999px;
+  padding: 0.25rem 0.5rem;
+  font-size: 0.9rem;
+  cursor: pointer;
+  background: rgba(148, 163, 184, 0.08);
+  color: var(--accent);
+}
 /* Utilities */
 
 .error-text {

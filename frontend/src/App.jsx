@@ -5,15 +5,17 @@ import { Layout } from "./components/Layout";
 import { SearchBar } from "./components/SearchBar";
 import { TrackCard } from "./components/TrackCard";
 import { NowPlayingBar } from "./components/NowPlayingBar";
+import { FavoritesPlaylist } from "./components/FavoritesPlaylist";
 import { useRecommendations } from "./hooks/useRecommendations";
 import { useTheme } from "./hooks/useTheme";
+import { useFavorites } from "./hooks/useFavorites";
 
 function App() {
   const { theme, toggleTheme } = useTheme();
 
   const {
     query,
-    setQuery, // unused for now but available
+    setQuery,
     submit,
     matchedTrack,
     recommendations,
@@ -21,37 +23,58 @@ function App() {
     error,
   } = useRecommendations();
 
-  const [currentIndex, setCurrentIndex] = useState(null);
+  const { favorites, isFavorite, toggleFavorite } = useFavorites();
 
+  // playContext: which list we're playing from + index within that list
+  const [playContext, setPlayContext] = useState({
+    type: "recs", // "recs" | "favorites"
+    index: null,
+  });
+
+  // Reset index when recommendations change (new search)
   useMemo(() => {
-    setCurrentIndex(null);
+    setPlayContext((prev) => ({ ...prev, type: "recs", index: null }));
   }, [recommendations]);
 
+  const currentQueue =
+    playContext.type === "favorites" ? favorites : recommendations;
+
   const currentTrack =
-    currentIndex !== null && recommendations[currentIndex]
-      ? recommendations[currentIndex]
+    playContext.index !== null && currentQueue[playContext.index]
+      ? currentQueue[playContext.index]
       : null;
 
   function handlePlayFromCard(index) {
-    setCurrentIndex(index);
+    setPlayContext({ type: "recs", index });
+  }
+
+  function handlePlayFromFavorites(index) {
+    setPlayContext({ type: "favorites", index });
   }
 
   function handleNextTrack() {
-    if (!recommendations.length || currentIndex === null) return;
+    if (!currentQueue.length || playContext.index === null) return;
     const nextIndex =
-      currentIndex + 1 < recommendations.length ? currentIndex + 1 : 0;
-    setCurrentIndex(nextIndex);
+      playContext.index + 1 < currentQueue.length ? playContext.index + 1 : 0;
+    setPlayContext((prev) => ({ ...prev, index: nextIndex }));
   }
 
   function handlePrevTrack() {
-    if (!recommendations.length || currentIndex === null) return;
+    if (!currentQueue.length || playContext.index === null) return;
     const prevIndex =
-      currentIndex - 1 >= 0 ? currentIndex - 1 : recommendations.length - 1;
-    setCurrentIndex(prevIndex);
+      playContext.index - 1 >= 0
+        ? playContext.index - 1
+        : currentQueue.length - 1;
+    setPlayContext((prev) => ({ ...prev, index: prevIndex }));
   }
 
-  const hasPrev = recommendations.length > 1 && currentIndex !== null;
-  const hasNext = recommendations.length > 1 && currentIndex !== null;
+  const hasPrev = currentQueue.length > 1 && playContext.index !== null;
+  const hasNext = currentQueue.length > 1 && playContext.index !== null;
+
+  const activeRecsIndex =
+    playContext.type === "recs" ? playContext.index : null;
+  const activeFavIndex =
+    playContext.type === "favorites" ? playContext.index : null;
 
   return (
     <Layout theme={theme} onToggleTheme={toggleTheme}>
@@ -87,12 +110,22 @@ function App() {
               key={`${track.row_index}-${track.name}`}
               track={track}
               index={i}
-              isActive={i === currentIndex}
+              isActive={i === activeRecsIndex}
               onPlay={handlePlayFromCard}
+              isFavorite={isFavorite(track)}
+              onToggleFavorite={toggleFavorite}
             />
           ))}
         </div>
       </section>
+
+      <FavoritesPlaylist
+        favorites={favorites}
+        onPlay={handlePlayFromFavorites}
+        isFavorite={isFavorite}
+        onToggleFavorite={toggleFavorite}
+        activeIndex={activeFavIndex}
+      />
 
       <NowPlayingBar
         track={currentTrack}

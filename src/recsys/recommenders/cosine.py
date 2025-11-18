@@ -26,38 +26,56 @@ class CosineRecommender(Recommender):
         with id_map_path.open() as f:
             self.id_map = json.load(f)
 
-    def similar_by_index(self, row_index: int, top_k: int = 10) -> List[Dict]:
-        """Return top_k most similar tracks to the given row_index."""
+    def similar_by_index(
+        self,
+        row_index: int,
+        top_k: int = 10,
+        max_per_artist: int = 2,
+    ) -> List[Dict]:
+        """
+        Return up to top_k most similar tracks, with simple artist diversity:
+        no more than max_per_artist tracks per artist.
+        """
         n = self.X.shape[0]
         if row_index < 0 or row_index >= n:
             raise IndexError(f"row_index {row_index} out of range [0, {n})")
 
-        # 1 x d vector
         v = self.X[row_index : row_index + 1]
-        sims = cosine_similarity(v, self.X)[0]  # shape: (n,)
+        sims = cosine_similarity(v, self.X)[0]
 
-        # Exclude the item itself
+        # Exclude self
         sims[row_index] = -1.0
 
-        # Get indices of the top_k highest similarity scores
-        if top_k >= n:
-            idxs = np.argsort(-sims)  # sort all
-        else:
-            # partial sort for speed, then order that subset
-            idxs = np.argpartition(-sims, range(top_k))[:top_k]
-            idxs = idxs[np.argsort(-sims[idxs])]
+        # Sort all indices by similarity (descending)
+        order = np.argsort(-sims)
 
         recs: List[Dict] = []
-        for j in idxs:
+        artist_counts: dict[str, int] = {}
+
+        for j in order:
+            if sims[j] <= 0:
+                # stop early if we hit non-positive similarity; optional
+                break
+
             row = self.id_map[j]
+            artist = row["artist"]
+            cnt = artist_counts.get(artist, 0)
+            if cnt >= max_per_artist:
+                continue
+
             recs.append(
                 {
                     "row_index": int(j),
                     "name": row["title"],
-                    "artist": row["artist"],
+                    "artist": artist,
                     "score": float(sims[j]),
                     "preview_url": row.get("preview_url"),
                     "artwork_url": row.get("artwork_url"),
                 }
             )
+            artist_counts[artist] = cnt + 1
+
+            if len(recs) >= top_k:
+                break
+
         return recs

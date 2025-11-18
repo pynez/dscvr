@@ -1,5 +1,5 @@
 // frontend/src/components/TrackCard.jsx
-export function TrackCard({ track, index, onPlay, isActive }) {
+export function TrackCard({ track, index, onPlay, isActive, isFavorite, onToggleFavorite }) {
   const {
     name,
     artist,
@@ -35,6 +35,16 @@ export function TrackCard({ track, index, onPlay, isActive }) {
               {isActive ? "Playing in mini player" : "Play in mini player"}
             </button>
           )}
+
+            <button
+            type="button"
+            className="track-fav-btn"
+            onClick={() => onToggleFavorite(track)}
+            aria-label={isFavorite ? "Remove from favorites" : "Add to favorites"}
+          >
+            {isFavorite ? "♥" : "♡"}
+          </button>
+          
         </div>
       </div>
     </article>

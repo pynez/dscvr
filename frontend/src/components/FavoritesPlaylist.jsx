@@ -38,7 +38,7 @@ export function FavoritesPlaylist({
                   className="favorites-play"
                   onClick={() => onPlay(i)}
                 >
-                  ▶️
+                  ▶
                 </button>
                 <div className="favorites-meta">
                   <div className="favorites-title">{track.name}</div>

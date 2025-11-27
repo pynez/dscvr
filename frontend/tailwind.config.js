@@ -1,5 +1,6 @@
 /** @type {import('tailwindcss').Config} */
-export default {
+module.exports = {
+  darkMode: ["class", '[data-theme="dark"]'],
   content: [
     "./index.html",
     "./src/**/*.{js,jsx,ts,tsx}",
@@ -7,14 +8,19 @@ export default {
   theme: {
     extend: {
       colors: {
-        bg: {
-          DEFAULT: "#050816",
-          light: "#f3f4f6",
+        // Core background layers
+        app: {
+          bg: "var(--app-bg)",
+          fg: "var(--app-fg)",
+          subtle: "var(--app-subtle)",
+          border: "var(--app-border)"
         },
-        accent: "#8b5cf6",
+        accent: {
+          DEFAULT: "var(--accent)",
+          fg: "var(--accent-fg)",
+        },
       },
     },
   },
-  darkMode: ["class", '[data-theme="dark"]'],
   plugins: [],
-}
+};

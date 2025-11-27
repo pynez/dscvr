@@ -4,34 +4,48 @@
 
 :root {
   color-scheme: dark light;
+  /* Fallbacks so the UI isn't blank before data-theme is set */
+  --bg: rgb(28, 29, 23);
+  --bg-elevated: rgb(58, 59, 53);
+  --app-bg: #0b1020;
+  --app-fg: #f9fafb;
+  --app-subtle: #9ca3af;
+  --app-border: #1f2937;
 }
 
 /* Dark theme (current look) */
 :root[data-theme="dark"] {
-  --bg: #050816;
-  --bg-elevated: #0b1020;
-  --accent: #8b5cf6;
-  --accent-soft: rgba(139, 92, 246, 0.15);
+  --bg: rgb(28, 29, 23);
+  --bg-elevated: rgb(58, 59, 53);
+  --app-bg: rgb(28, 29, 23);
+  --app-fg: #f9fafb;
+  --app-subtle: #9ca3af;
+  --app-border: #1f2937;
+  --accent: #d49019;
+  --accent-soft: #8a5d10;
   --text: #f9fafb;
-  --muted: #9ca3af;
-  --border: rgba(148, 163, 184, 0.25);
+  --border: #d49019;
   --radius-lg: 18px;
   --radius-xl: 24px;
-  --shadow-soft: 0 18px 45px rgba(15, 23, 42, 0.8);
+  --complement: rgb(194, 194, 194);
 }
 
 /* Light theme */
 :root[data-theme="light"] {
-  --bg: #f3f4f6;
-  --bg-elevated: #ffffff;
-  --accent: #8b5cf6;
-  --accent-soft: rgba(139, 92, 246, 0.12);
+  --bg: rgb(194, 194, 194);
+  --bg-elevated: rgb(165, 165, 165);
+  --app-bg: rgb(194, 194, 194);
+  --app-fg: #0f172a;
+  --app-subtle: #6b7280;
+  --app-border: rgba(148, 163, 184, 0.6);
+  --accent: #d49019;
+  --accent-soft: #8a5d10;
   --text: #0f172a;
-  --muted: #6b7280;
-  --border: rgba(148, 163, 184, 0.6);
+  --border: #d49019;
   --radius-lg: 18px;
   --radius-xl: 24px;
   --shadow-soft: 0 10px 25px rgba(15, 23, 42, 0.12);
+  --complement: rgb(28, 29, 23);
 }
 
 *,
@@ -45,40 +59,9 @@ body {
   min-height: 100vh;
   font-family: system-ui, -apple-system, BlinkMacSystemFont, "SF Pro Text",
     Arial, sans-serif;
-  background: radial-gradient(circle at top, #1f2937 0, var(--bg) 52%);
+  background: var(--bg);
   color: var(--text);
 }
-
-.app-root {
-  min-height: 100vh;
-  display: flex;
-  flex-direction: column;
-  padding: 1.25rem;
-  max-width: 960px;
-  margin: 0 auto;
-}
-
-/* Header */
-
-.app-header {
-  padding: 1rem 0 1.5rem;
-}
-
-.app-title {
-  font-size: clamp(2rem, 4vw, 2.5rem);
-  font-weight: 700;
-  margin: 0 0 0.25rem;
-  letter-spacing: 0.04em;
-}
-
-.app-subtitle {
-  margin: 0;
-  color: var(--muted);
-  max-width: 32rem;
-  font-size: 0.95rem;
-}
-
-/* Search */
 
 .search-form {
   margin: 1rem 0 1.5rem;
@@ -89,7 +72,7 @@ body {
   font-size: 0.8rem;
   text-transform: uppercase;
   letter-spacing: 0.15em;
-  color: var(--muted);
+  color: var(--text);
   margin-bottom: 0.35rem;
 }
 
@@ -102,8 +85,8 @@ body {
   flex: 1;
   border-radius: 999px;
   border: 1px solid var(--border);
-  background-color: rgba(15, 23, 42, 0.7);
-  color: var(--text);
+  background-color: var(--bg-elevated);
+  color: var(--complement);
   padding: 0.7rem 1rem;
   font-size: 0.95rem;
   outline: none;
@@ -124,7 +107,7 @@ body {
   padding: 0 1.25rem;
   font-size: 0.9rem;
   font-weight: 600;
-  background: linear-gradient(135deg, #8b5cf6, #ec4899);
+  background: linear-gradient(135deg, #d49019, #8a5d10);
   color: #fff;
   cursor: pointer;
   display: inline-flex;
@@ -134,20 +117,16 @@ body {
 
 .search-button:disabled {
   opacity: 0.6;
-  cursor: default;
+  cursor: not-allowed;
 }
 
 /* Content */
-
-.app-main {
-  flex: 1;
-}
 
 .matched-section h2 {
   font-size: 0.9rem;
   text-transform: uppercase;
   letter-spacing: 0.12em;
-  color: var(--muted);
+  color: var(--text);
   margin-bottom: 0.25rem;
 }
 
@@ -174,11 +153,7 @@ body {
   gap: 0.75rem;
   padding: 0.9rem;
   border-radius: var(--radius-lg);
-  background: linear-gradient(
-    145deg,
-    rgba(15, 23, 42, 0.9),
-    rgba(17, 24, 39, 0.96)
-  );
+  background: var(--bg-elevated);
   border: 1px solid var(--border);
   box-shadow: var(--shadow-soft);
 }
@@ -203,13 +178,13 @@ body {
 .track-artist {
   margin: 0 0 0.25rem;
   font-size: 0.85rem;
-  color: var(--muted);
+  color: var(--text);
 }
 
 .track-score {
   margin: 0 0 0.25rem;
   font-size: 0.75rem;
-  color: var(--muted);
+  color: var(--text);
 }
 
 .track-audio {
@@ -223,7 +198,7 @@ body {
   padding-top: 0.75rem;
   border-top: 1px solid rgba(31, 41, 55, 0.7);
   font-size: 0.8rem;
-  color: var(--muted);
+  color: var(--text);
 }
 
 .now-playing {
@@ -234,7 +209,7 @@ body {
   margin-top: 1.5rem;
   padding: 0.6rem 0.9rem;
   border-radius: 999px;
-  background: radial-gradient(circle at top left, #4b5563 0, #020617 55%);
+  background: radial-gradient(circle at top left, var(--accent), var(--accent-soft) 55%);
   border: 1px solid rgba(148, 163, 184, 0.5);
   display: flex;
   align-items: center;
@@ -267,7 +242,7 @@ body {
   font-size: 0.7rem;
   text-transform: uppercase;
   letter-spacing: 0.12em;
-  color: var(--muted);
+  color: var(--text);
 }
 
 .now-playing-title {
@@ -280,7 +255,7 @@ body {
 
 .now-playing-artist {
   font-size: 0.8rem;
-  color: var(--muted);
+  color: var(--text);
   white-space: nowrap;
   text-overflow: ellipsis;
   overflow: hidden;
@@ -298,12 +273,12 @@ body {
   padding: 0.25rem 0.55rem;
   font-size: 1rem;
   cursor: pointer;
-  background: rgba(15, 23, 42, 0.8);
+  background: var(--bg-elevated);
   color: var(--text);
 }
 
 .np-btn-main {
-  background: linear-gradient(135deg, #8b5cf6, #ec4899);
+  background: linear-gradient(135deg, var(--accent), var(--accent-soft));
 }
 
 .np-btn:disabled {
@@ -319,6 +294,7 @@ body {
 
 .track-card--active {
   border-color: var(--accent);
+  border-width: 3px;
   box-shadow: 0 0 0 1px var(--accent-soft), var(--shadow-soft);
 }
 
@@ -332,7 +308,7 @@ body {
   padding: 0.35rem 0.75rem;
   font-size: 0.78rem;
   font-weight: 500;
-  background: rgba(139, 92, 246, 0.12);
+  background: rgba(0, 0, 0, 0);
   color: var(--accent);
   cursor: pointer;
 }
@@ -372,7 +348,7 @@ body {
 
 .favorites-count {
   font-size: 0.8rem;
-  color: var(--muted);
+  color: var(--text);
 }
 
 .favorites-list {
@@ -422,7 +398,7 @@ body {
 
 .favorites-artist {
   font-size: 0.75rem;
-  color: var(--muted);
+  color: var(--text);
   white-space: nowrap;
   text-overflow: ellipsis;
   overflow: hidden;
@@ -465,7 +441,7 @@ body {
 }
 
 .dim-text {
-  color: var(--muted);
+  color: var(--text);
   font-size: 0.9rem;
 }
 

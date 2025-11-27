@@ -71,7 +71,7 @@ export function NowPlayingBar({ track, hasPrev, hasNext, onPrev, onNext }) {
           onClick={handleTogglePlay}
           aria-label={isPlaying ? "Pause" : "Play"}
         >
-          {isPlaying ? "⏸" : "▶️"}
+          {isPlaying ? "⏸" : "▶"}
         </button>
         <button
           type="button"

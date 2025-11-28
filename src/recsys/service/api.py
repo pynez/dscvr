@@ -21,6 +21,7 @@ app = FastAPI(
 
 origins = [
     "http://localhost:5173",  # Vite dev server
+    "https://dscvr.vercel.app"
 ]
 
 app.add_middleware(

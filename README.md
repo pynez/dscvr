@@ -1,6 +1,7 @@
 
-# dscvr
+# dscvr.
 DSCVR - Music Recommendation
+[visit the dscvr here.](https://dscvr.vercel.app)
 
 ## Key Features & Benefits
 
@@ -11,7 +12,7 @@ DSCVR is a music recommendation system designed to discover new music tailored t
 -   **User-Friendly Interface:** A React-based frontend provides an intuitive platform for interacting with the recommendation system.
 -   **Data-Driven Approach:** Utilizes processed music data to refine and enhance recommendation accuracy.
 
-## Prerequisites & Dependencies
+## Prerequisites & Dependencies for running locally:
 
 Before you begin, ensure you have the following installed:
 

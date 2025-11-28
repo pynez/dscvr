@@ -2,7 +2,7 @@
 # dscvr.
 DSCVR - Music Recommendation
 
-[visit dscvr here.](https://dscvr.vercel.app)
+[Visit dscvr here.](https://dscvr.vercel.app)
 
 ## Key Features & Benefits
 

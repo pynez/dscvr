@@ -18,5 +18,7 @@ class Recommendation(BaseModel):
 
 class RecommendResponse(BaseModel):
     query: str
-    matched: dict | None
+    resolved_index: int
+    resolved_name: str
+    resolved_artist: str
     recommendations: list[Recommendation]

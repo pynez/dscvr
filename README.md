@@ -1,15 +1,27 @@
 
 # dscvr
-DSCVR - Music Recommendation
+[DSCVR](dscvr.vercel.app) - Music Recommendation by [Victor Pyne Jr](pyne.dev)
 
 ## Key Features & Benefits
 
 DSCVR is a music recommendation system designed to discover new music tailored to your preferences. Key features include:
 
--   **Personalized Recommendations:** Leverages machine learning techniques to provide relevant music suggestions.
+-   **Personalized Recommendations:** Generates personalized recommendations using cosine similarity over audio and metadata feature embeddings.
 -   **Genre-Based Exploration:** Explore music based on predefined genres such as Alt-R&B, R&B, and Soul.
 -   **User-Friendly Interface:** A React-based frontend provides an intuitive platform for interacting with the recommendation system.
 -   **Data-Driven Approach:** Utilizes processed music data to refine and enhance recommendation accuracy.
+
+## [Get started with the DSCVR webapp here.](dscvr.vercel.app)
+
+Select a genre, explore curated tracks, and receive recommendations powered by a machine learning-based similarity model trained on Last.fm data.
+Or, see below to run DSCVR locally on your machine.
+
+## System Architecture
+
+DSCVR consists of:
+- A Python-based backend that performs ETL, preprocessing, and recommendation inference
+- A REST API exposing recommendation endpoints
+- A React frontend that consumes the API and presents results in a responsive UI
 
 ## Prerequisites & Dependencies
 

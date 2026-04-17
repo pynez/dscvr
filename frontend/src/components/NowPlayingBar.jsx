@@ -1,94 +1,89 @@
-// frontend/src/components/NowPlayingBar.jsx
-import { useEffect, useRef, useState } from "react";
+import { useRef, useEffect, useState } from "react";
 
 export function NowPlayingBar({ track, hasPrev, hasNext, onPrev, onNext }) {
   const audioRef = useRef(null);
-  const [isPlaying, setIsPlaying] = useState(false);
+  const [playing, setPlaying] = useState(false);
 
-  // Auto-play when the track or its preview changes
   useEffect(() => {
-    if (!track || !track.preview_url || !audioRef.current) {
-      setIsPlaying(false);
-      return;
+    const audio = audioRef.current;
+    if (!audio) return;
+    if (track?.preview_url) {
+      audio.pause();
+      audio.currentTime = 0;
+      audio.load();
+      audio.play()
+        .then(() => setPlaying(true))
+        .catch(() => setPlaying(false));
+    } else {
+      audio.pause();
+      setPlaying(false);
     }
+  }, [track]);
 
-    // Load new source and play
-    audioRef.current.load();
-    audioRef.current
-      .play()
-      .then(() => setIsPlaying(true))
-      .catch(() => setIsPlaying(false));
-  }, [track?.preview_url]);
-
-  if (!track || !track.preview_url) {
-    // If there's nothing to play, don't show the bar
-    return null;
+  function togglePlay() {
+    const audio = audioRef.current;
+    if (!audio || !track?.preview_url) return;
+    if (playing) {
+      audio.pause();
+      setPlaying(false);
+    } else {
+      audio.play().then(() => setPlaying(true)).catch(() => setPlaying(false));
+    }
   }
 
-  const handleTogglePlay = () => {
-    if (!audioRef.current) return;
-    if (isPlaying) {
-      audioRef.current.pause();
-      setIsPlaying(false);
-    } else {
-      audioRef.current
-        .play()
-        .then(() => setIsPlaying(true))
-        .catch(() => setIsPlaying(false));
-    }
-  };
+  if (!track) return null;
 
   return (
-    <div className="now-playing">
+    <div className="now-playing-bar">
+      {track.artwork_url && (
+        <img
+          src={track.artwork_url}
+          alt={track.name}
+          style={{ width: 36, height: 36, objectFit: "cover", flexShrink: 0 }}
+        />
+      )}
+
       <div className="now-playing-info">
-        {track.artwork_url && (
-          <img
-            src={track.artwork_url}
-            alt={`Artwork for ${track.name} by ${track.artist}`}
-            className="now-playing-art"
-          />
-        )}
-        <div className="now-playing-text">
-          <span className="now-playing-label">Now playing</span>
-          <div className="now-playing-title">{track.name}</div>
-          <div className="now-playing-artist">{track.artist}</div>
-        </div>
+        <p className="now-playing-title">{track.name}</p>
+        <p className="now-playing-artist">{track.artist}</p>
       </div>
 
       <div className="now-playing-controls">
         <button
-          type="button"
-          className="np-btn"
+          className="np-ctrl-btn"
           onClick={onPrev}
           disabled={!hasPrev}
-          aria-label="Previous track"
+          aria-label="Previous"
         >
-          ⏮
+          ←
         </button>
         <button
-          type="button"
-          className="np-btn np-btn-main"
-          onClick={handleTogglePlay}
-          aria-label={isPlaying ? "Pause" : "Play"}
+          className="np-ctrl-btn"
+          onClick={togglePlay}
+          aria-label={playing ? "Pause" : "Play"}
+          style={{ opacity: 1, fontSize: 18 }}
         >
-          {isPlaying ? "⏸" : "▶"}
+          {playing ? "⏸" : "▶"}
         </button>
         <button
-          type="button"
-          className="np-btn"
+          className="np-ctrl-btn"
           onClick={onNext}
           disabled={!hasNext}
-          aria-label="Next track"
+          aria-label="Next"
         >
-          ⏭
+          →
         </button>
       </div>
 
-      {/* Hidden audio element controlled by the bar */}
-      <audio ref={audioRef} className="now-playing-audio">
-        <source src={track.preview_url} type="audio/mpeg" />
-        Your browser does not support the audio element.
-      </audio>
+      {track.preview_url && (
+        <audio
+          ref={audioRef}
+          onEnded={() => { setPlaying(false); onNext?.(); }}
+          style={{ display: "none" }}
+        >
+          <source src={track.preview_url} type="audio/mpeg" />
+        </audio>
+      )}
     </div>
   );
 }

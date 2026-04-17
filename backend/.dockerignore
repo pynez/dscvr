@@ -1,0 +1,36 @@
+fly.toml
+
+# Git/CI metadata
+.git
+.github
+.gitignore
+
+# Python env and caches
+.venv/
+venv/
+__pycache__/
+*.py[cod]
+*.pyi
+*.pyo
+*.pyd
+.ipynb_checkpoints/
+
+# Editor and OS cruft
+.vscode/
+.idea/
+.DS_Store
+*.swp
+
+# Local env/config
+.env
+.env.*
+.envrc
+
+# Build artifacts
+dist/
+build/
+
+# Data: include only artifacts + seeds needed at runtime
+data/*
+!data/artifacts/**
+!data/seeds/**

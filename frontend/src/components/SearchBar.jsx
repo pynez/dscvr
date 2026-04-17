@@ -12,13 +12,13 @@ export function SearchBar({ initialQuery, onSubmit, isLoading }) {
   return (
     <form className="search-form" onSubmit={handleSubmit}>
       <label className="search-label" htmlFor="query">
-        Enter a song — artist
+        Enter a song - artist
       </label>
       <div className="search-row">
         <input
           id="query"
           className="search-input"
-          placeholder="e.g. Snooze — SZA"
+          placeholder="e.g. Snooze - SZA"
           value={localQuery}
           onChange={(e) => setLocalQuery(e.target.value)}
         />

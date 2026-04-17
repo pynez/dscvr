@@ -1,6 +1,5 @@
 /** @type {import('tailwindcss').Config} */
 module.exports = {
-  darkMode: ["class", '[data-theme="dark"]'],
   content: [
     "./index.html",
     "./src/**/*.{js,jsx,ts,tsx}",
@@ -8,17 +7,27 @@ module.exports = {
   theme: {
     extend: {
       colors: {
-        // Core background layers
         app: {
-          bg: "var(--app-bg)",
-          fg: "var(--app-fg)",
-          subtle: "var(--app-subtle)",
-          border: "var(--app-border)"
+          bg:      "var(--bg)",
+          surface: "var(--bg-surface)",
+          card:    "var(--bg-card)",
+          subtle:  "var(--text-2)",
+          border:  "var(--border)",
         },
         accent: {
           DEFAULT: "var(--accent)",
-          fg: "var(--accent-fg)",
+          soft:    "var(--accent-soft)",
         },
+      },
+      fontFamily: {
+        sans: ["system-ui", "-apple-system", "SF Pro Text", "Helvetica Neue", "Arial", "sans-serif"],
+      },
+      borderRadius: {
+        sm:   "var(--radius-sm)",
+        md:   "var(--radius-md)",
+        lg:   "var(--radius-lg)",
+        xl:   "var(--radius-xl)",
+        full: "var(--radius-full)",
       },
     },
   },

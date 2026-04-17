@@ -39,7 +39,7 @@ The following dependencies are required:
 
 **Python:**
 
--   Specific Python libraries are detailed in the `src/recsys` files.  You may need to install them using `pip install -r requirements.txt` (if a `requirements.txt` file exists. If not, consult the code and install manually)
+-   Specific Python libraries are detailed in the `backend/src/recsys` files. Install them from `backend/requirements.txt` (or inspect the code and install manually).
 
 **JavaScript:**
 
@@ -67,12 +67,15 @@ Follow these steps to set up and run the DSCVR project:
 
 2.  **Set up the Python Backend:**
 
-    -   Navigate to the backend directory (e.g., `src/recsys`).
+    -   Navigate to the backend directory:
+        ```bash
+        cd backend
+        ```
     -   Install the required Python packages:
         ```bash
-        # If a requirements.txt exists in src/recsys:
         pip install -r requirements.txt
-        # Otherwise, install dependencies according to the code in etl_lastfm.py, preprocess.py and service/api.py
+        # Otherwise, install dependencies according to the code in backend/src/recsys/etl_lastfm.py,
+        # backend/src/recsys/preprocess.py and backend/src/recsys/service/api.py
         ```
 
 3.  **Set up the React Frontend:**
@@ -95,8 +98,9 @@ Follow these steps to set up and run the DSCVR project:
 
 ### Backend Usage:
 
--   The main logic resides in `src/recsys`.  See the `etl_lastfm.py`, `preprocess.py`, and `recommenders/` subdirectories for the ETL process, data preprocessing and different recommendation algorithms.
--   The API can be started via `service/api.py`.  The API is defined using `schemas.py`
+-   The main logic resides in `backend/src/recsys`. See the `etl_lastfm.py`, `preprocess.py`, and `recommenders/` subdirectories for the ETL process, data preprocessing and different recommendation algorithms.
+-   The API can be started via `backend/src/recsys/service/api.py`. The API is defined using `schemas.py`.
+-   Run backend scripts and services from inside the `backend/` directory so Python can resolve the `src` package.
 
 ### Frontend Usage:
 
@@ -116,50 +120,54 @@ Follow these steps to set up and run the DSCVR project:
 ## Project Structure
 
 ```
-├── .DS_Store
-├── .cache
-├── .gitignore
+├── backend/
+│   ├── .dockerignore
+│   ├── Dockerfile
+│   ├── fly.toml
+│   ├── requirements.txt
+│   ├── src/
+│   │   ├── cli/
+│   │   └── recsys/
+│   └── data/
+│       ├── artifacts/
+│       ├── processed/
+│       └── seeds/
+├── frontend/
+│   ├── .gitignore
+│   ├── README.md
+│   ├── eslint.config.js
+│   └── index.html
 ├── README.md
-└── data/
-└── artifacts/
-    ├── features.npy
-    ├── id_map.json
-    ├── text_svd.pkl
-└── processed/
-    ├── tracks_lastfm.parquet
-└── seeds/
-    ├── alt_rnb.json
-    ├── rnb.json
-    ├── soul.json
-└── frontend/
-    ├── .gitignore
-    ├── README.md
-    ├── eslint.config.js
-    ├── index.html
+├── gitignore
+├── venv/
+└── web/
 
 ```
 
 ### Important Files:
 
 -   **`README.md`:**  (This file) Provides an overview of the project and instructions for setup and usage.
+-   **`backend/Dockerfile`:** Container build for the backend API.
+-   **`backend/fly.toml`:** Fly.io deployment config for the backend.
+-   **`backend/requirements.txt`:** Python dependencies for the backend.
 -   **`frontend/README.md`:**  Frontend-specific instructions and information.
 -   **`frontend/index.html`:** The main HTML file for the React application.
 -   **`frontend/eslint.config.js`:** ESLint configuration for code linting in the frontend.
 
 **Backend Files**
 
-- `src/recsys/etl_lastfm.py`: ETL process to load data from LastFM.
-- `src/recsys/preprocess.py`: Preprocesses music data for the recommendation system.
-- `src/recsys/recommenders/base.py`: Base class for recommendation algorithms.
-- `src/recsys/recommenders/cosine.py`: Implements the cosine similarity based recommender
-- `src/recsys/io.py`: Input/Output utilities.
-- `src/recsys/service/schemas.py`: Schemas for the API.
-- `src/recsys/service/api.py`: Defines the API endpoints using the schemas
+- `backend/src/recsys/etl_lastfm.py`: ETL process to load data from LastFM.
+- `backend/src/recsys/preprocess.py`: Preprocesses music data for the recommendation system.
+- `backend/src/recsys/recommenders/base.py`: Base class for recommendation algorithms.
+- `backend/src/recsys/recommenders/cosine.py`: Implements the cosine similarity based recommender.
+- `backend/src/recsys/io.py`: Input/Output utilities.
+- `backend/src/recsys/service/schemas.py`: Schemas for the API.
+- `backend/src/recsys/service/api.py`: Defines the API endpoints using the schemas.
 
 ## Configuration Options
 
 -   The React frontend can be configured by modifying the `frontend/src/main.jsx` file.
--   The backend can be configured by modifying the files in `src/recsys`, primarily `etl_lastfm.py`, `preprocess.py` and `api.py`.
+-   The backend can be configured by modifying the files in `backend/src/recsys`, primarily `etl_lastfm.py`, `preprocess.py` and `api.py`.
 
 ## Contributing Guidelines
 

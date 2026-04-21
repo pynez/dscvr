@@ -291,10 +291,11 @@ button {
   display: inline-flex;
   align-items: center;
   gap: 5px;
-  font-family: var(--font-footer);
-  font-size: 10px;
-  letter-spacing: 0.12em;
-  text-transform: uppercase;
+  font-family: var(--font-body);
+  font-size: clamp(11px, 1vw, 12px);
+  font-weight: 300;
+  letter-spacing: 0;
+  text-transform: none;
   color: var(--color-text);
   opacity: 0.55;
   white-space: nowrap;

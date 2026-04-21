@@ -1,6 +1,100 @@
+# ── Environment variables ────────────────────────────────────────────────────
 .env
+.env.*
 *.env
+.envrc
+*.local
+
+# ── Python ───────────────────────────────────────────────────────────────────
 venv/
+.venv/
 __pycache__/
-data/artifacts/
-data/processed/
+*.py[cod]
+*.pyo
+*.pyd
+*.pyi
+.ipynb_checkpoints/
+.mypy_cache/
+.ruff_cache/
+.pytype/
+*.egg-info/
+dist/
+build/
+*.egg
+pip-log.txt
+pip-delete-this-directory.txt
+
+# ── Backend data (large ML artifacts + raw/processed datasets) ───────────────
+backend/data/artifacts/
+backend/data/processed/
+backend/data/raw/
+# seeds and schemas are small and intentionally tracked
+
+# ── Node / Frontend ──────────────────────────────────────────────────────────
+node_modules/
+frontend/dist/
+frontend/dist-ssr/
+.npm/
+.pnpm-store/
+.yarn/
+
+# ── Logs ─────────────────────────────────────────────────────────────────────
+logs/
+*.log
+npm-debug.log*
+yarn-debug.log*
+yarn-error.log*
+pnpm-debug.log*
+lerna-debug.log*
+
+# ── Test & coverage output ───────────────────────────────────────────────────
+.pytest_cache/
+.coverage
+coverage/
+*.lcov
+htmlcov/
+.nyc_output/
+frontend/coverage/
+
+# ── Build artifacts ───────────────────────────────────────────────────────────
+*.tsbuildinfo
+
+# ── Editor & IDE ─────────────────────────────────────────────────────────────
+.vscode/
+.idea/
+*.suo
+*.ntvs*
+*.njsproj
+*.sln
+*.swp
+*.swo
+*~
+
+# ── macOS ────────────────────────────────────────────────────────────────────
+.DS_Store
+.AppleDouble
+.LSOverride
+._*
+.Spotlight-V100
+.Trashes
+
+# ── Windows ──────────────────────────────────────────────────────────────────
+Thumbs.db
+ehthumbs.db
+Desktop.ini
+$RECYCLE.BIN/
+
+# ── Linux ────────────────────────────────────────────────────────────────────
+*~
+.fuse_hidden*
+.nfs*
+
+# ── Claude / session tooling ─────────────────────────────────────────────────
+.remember/
+.cache
+.claude/settings.local.json
+
+# ── Misc ─────────────────────────────────────────────────────────────────────
+*.bak
+*.tmp
+*.orig

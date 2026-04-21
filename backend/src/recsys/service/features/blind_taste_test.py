@@ -16,10 +16,18 @@ NUM_TRACKS = 10
 
 
 def _is_playable(url) -> bool:
-    """Return True only for non-DRM preview URLs the browser can actually play."""
+    """
+    Return True only for URLs that are not known-stale.
+    Mirrors preview_resolver._is_stale_url but kept local to avoid circular imports.
+    """
     if not url or not isinstance(url, str) or url.strip() == "":
         return False
-    return "itunes.apple.com" not in url and not url.endswith(".m4p")
+    if "itunes.apple.com" in url or url.endswith(".m4p"):
+        return False
+    # Deezer CDN signed URLs expire — treat as unplayable so resolve_batch refreshes them
+    if "cdnt-preview.dzcdn.net" in url and "hdnea=" in url:
+        return False
+    return True
 
 
 def get_session(recommender) -> dict:

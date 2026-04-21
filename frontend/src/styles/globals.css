@@ -129,7 +129,12 @@ button {
 /* ── Panel body ─────────────────────────────────────────────────────────────── */
 .panel-body {
   flex: 1;
-  overflow: hidden;
+  overflow-y: auto;
+  /* Hide scrollbar visually — content still scrolls if it overflows */
+  scrollbar-width: none;
+}
+.panel-body::-webkit-scrollbar {
+  display: none;
 }
 
 /* ─── Panel 1: Splash ──────────────────────────────────────────────────────── */
@@ -187,6 +192,16 @@ button {
   padding-top: 32px;
 }
 
+@media (max-width: 767px) {
+  .panel-2 .panel-body {
+    padding-top: 16px;
+  }
+
+  .feature-row {
+    padding: 12px 0;
+  }
+}
+
 .panel-sub {
   font-family: var(--font-body);
   font-size: 20px;
@@ -225,24 +240,9 @@ button {
   transform: translateX(10px);
 }
 
-/* Arrow */
+/* Arrow — hidden */
 .feature-row-arrow {
-  position: absolute;
-  right: 4px;
-  top: 50%;
-  transform: translateY(-50%);
-  font-family: var(--font-body);
-  font-size: 18px;
-  font-weight: 300;
-  color: var(--color-text);
-  opacity: 0;
-  transition: opacity 0.22s ease;
-  pointer-events: none;
-  line-height: 1;
-}
-
-.feature-row:hover .feature-row-arrow {
-  opacity: 1;
+  display: none;
 }
 
 /* Feature name with slow-draw underline */
@@ -278,6 +278,43 @@ button {
   font-weight: 300;
   line-height: 1.4;
   color: var(--color-text);
+}
+
+/* ── Start here badge ────────────────────────────────────────────────────────── */
+.feature-row-name-line {
+  display: flex;
+  align-items: baseline;
+  gap: 10px;
+}
+
+.feature-start-badge {
+  display: inline-flex;
+  align-items: center;
+  gap: 5px;
+  font-family: var(--font-footer);
+  font-size: 10px;
+  letter-spacing: 0.12em;
+  text-transform: uppercase;
+  color: var(--color-text);
+  opacity: 0.55;
+  white-space: nowrap;
+  position: relative;
+  top: -1px;
+}
+
+.feature-start-dot {
+  display: inline-block;
+  width: 5px;
+  height: 5px;
+  border-radius: 50%;
+  background: var(--color-text);
+  animation: start-pulse 2.2s ease-in-out infinite;
+  flex-shrink: 0;
+}
+
+@keyframes start-pulse {
+  0%, 100% { opacity: 1; transform: scale(1); }
+  50% { opacity: 0.25; transform: scale(0.6); }
 }
 
 /* ── Footer (both panels) ────────────────────────────────────────────────────── */
@@ -627,6 +664,37 @@ button {
 .explore-track-btn--active {
   background: var(--color-text);
   color: var(--color-bg);
+}
+
+/* Saved tracks section */
+.explore-saved {
+  margin-top: 64px;
+  max-width: 1100px;
+}
+
+.explore-saved-header {
+  display: flex;
+  align-items: baseline;
+  gap: 16px;
+  margin-bottom: 16px;
+}
+
+.explore-saved-title {
+  font-family: var(--font-wordmark);
+  font-size: clamp(28px, 3.5vw, 42px);
+  font-weight: 400;
+  letter-spacing: -0.01em;
+  line-height: 1.05;
+  color: var(--color-text);
+}
+
+.explore-saved-count {
+  font-family: var(--font-footer);
+  font-size: 10px;
+  letter-spacing: 0.14em;
+  text-transform: uppercase;
+  color: var(--color-text);
+  opacity: 0.35;
 }
 
 /* Candidate list */

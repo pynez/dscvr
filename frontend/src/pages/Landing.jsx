@@ -3,6 +3,12 @@ import { Link, useLocation } from "react-router-dom";
 
 const FEATURES = [
   {
+    name: "explore",
+    sub: "classic mode. find tracks similar to the ones you love.",
+    path: "/explore",
+    startHere: true,
+  },
+  {
     name: "soundtrack your life",
     sub: "describe a moment. hear songs that fit the scene.",
     path: "/soundtrack",
@@ -26,11 +32,6 @@ const FEATURES = [
     name: "the séance",
     sub: "pick a deceased artist and summon their living successors.",
     path: "/seance",
-  },
-  {
-    name: "explore",
-    sub: "classic mode. find tracks similar to the ones you love.",
-    path: "/explore",
   },
 ];
 
@@ -89,11 +90,6 @@ export function Landing() {
             </svg>
           </div>
 
-          <footer className="panel-footer">
-            <p className="panel-footer-text">
-              built by <a href="https://pyne.dev" target="_blank" rel="noopener noreferrer" className="footer-link">victor</a>, for those who hear more than music.
-            </p>
-          </footer>
         </section>
 
         {/* ── Panel 2: Feature list ────────────────────────────────────────── */}
@@ -108,9 +104,17 @@ export function Landing() {
             <ul className="feature-list">
               {FEATURES.map((f) => (
                 <li key={f.path}>
-                  <Link to={f.path} className="feature-row">
+                  <Link to={f.path} className={`feature-row${f.startHere ? " feature-row--start" : ""}`}>
                     <div className="feature-row-inner">
-                      <span className="feature-row-name">{f.name}</span>
+                      <div className="feature-row-name-line">
+                        <span className="feature-row-name">{f.name}</span>
+                        {f.startHere && (
+                          <span className="feature-start-badge" aria-label="start here">
+                            <span className="feature-start-dot" />
+                            start here
+                          </span>
+                        )}
+                      </div>
                       <span className="feature-row-sub">{f.sub}</span>
                     </div>
                     <span className="feature-row-arrow" aria-hidden="true">→</span>

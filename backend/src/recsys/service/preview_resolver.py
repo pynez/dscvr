@@ -32,11 +32,21 @@ def _fuzz_score(a: str, b: str) -> float:
     return fuzz.token_set_ratio(a.lower(), b.lower())
 
 
-def _is_drm_url(url: str | None) -> bool:
-    """Return True for Apple FairPlay DRM previews — unplayable in all browsers."""
+def _is_stale_url(url: str | None) -> bool:
+    """
+    Return True for URLs that are known to be unplayable:
+      - Apple FairPlay DRM (.m4p / itunes.apple.com)
+      - Deezer CDN signed URLs (cdnt-preview.dzcdn.net with hdnea= token)
+        These are time-limited; once the token expires the server returns 403.
+        Always re-resolve via the Deezer search API to get a fresh signed URL.
+    """
     if not url:
         return False
-    return "itunes.apple.com" in url or url.endswith(".m4p")
+    if "itunes.apple.com" in url or url.endswith(".m4p"):
+        return True
+    if "cdnt-preview.dzcdn.net" in url and "hdnea=" in url:
+        return True
+    return False
 
 
 async def _resolve_single(
@@ -47,9 +57,9 @@ async def _resolve_single(
     existing_artwork: str | None = None,
 ) -> dict:
     """Resolve one track. Returns dict with preview_url, artwork_url, youtube_id."""
-    # Strip DRM-locked iTunes previews — keeping them is worse than null
-    # because the browser will silently fail to load them.
-    if _is_drm_url(existing_preview):
+    # Strip any stale/unplayable URL so the resolver starts from scratch.
+    # This covers expired Deezer CDN signed tokens (hdnea=) and iTunes DRM.
+    if _is_stale_url(existing_preview):
         existing_preview = None
 
     preview_url = existing_preview
@@ -123,26 +133,27 @@ async def resolve_batch(tracks: list[dict]) -> list[dict]:
     """
     Enrich a list of track dicts with resolved preview_url, artwork_url, youtube_id.
     Each dict must have 'name' (or 'track_name') and 'artist'.
-    Existing preview_url / artwork_url are passed through and only overridden
-    if a fresher source is found.
 
-    Returns the same list with each dict updated in place (and returned).
+    Concurrency is capped at 5 simultaneous Deezer requests to avoid rate-limiting.
+    Returns a new list with each dict updated with resolved fields.
     """
-    async with httpx.AsyncClient() as client:
-        tasks = []
-        for t in tracks:
-            name = t.get("name") or t.get("track_name") or ""
-            artist = t.get("artist") or ""
-            tasks.append(
-                _resolve_single(
-                    client,
-                    name,
-                    artist,
-                    existing_preview=t.get("preview_url"),
-                    existing_artwork=t.get("artwork_url"),
-                )
+    semaphore = asyncio.Semaphore(5)
+
+    async def _guarded(client, t):
+        async with semaphore:
+            return await _resolve_single(
+                client,
+                t.get("name") or t.get("track_name") or "",
+                t.get("artist") or "",
+                existing_preview=t.get("preview_url"),
+                existing_artwork=t.get("artwork_url"),
             )
-        results = await asyncio.gather(*tasks, return_exceptions=True)
+
+    async with httpx.AsyncClient() as client:
+        results = await asyncio.gather(
+            *[_guarded(client, t) for t in tracks],
+            return_exceptions=True,
+        )
 
     enriched = []
     for track, result in zip(tracks, results):

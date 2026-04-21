@@ -33,6 +33,9 @@ export function Explore() {
   function handlePlay(idx) {
     setPlayContext({ type: "recs", index: idx });
   }
+  function handlePlayFavorite(idx) {
+    setPlayContext({ type: "favorites", index: idx });
+  }
   function handleNext() {
     if (!currentQueue.length || playContext.index === null) return;
     setPlayContext((p) => ({ ...p, index: (p.index + 1) % currentQueue.length }));
@@ -187,6 +190,66 @@ export function Explore() {
               </div>
             </div>
           ))}
+        </div>
+      )}
+
+      {/* Saved tracks */}
+      {favorites.length > 0 && (
+        <div className="explore-saved">
+          <div className="explore-saved-header">
+            <span className="explore-saved-title">saved.</span>
+            <span className="explore-saved-count">{favorites.length} track{favorites.length !== 1 ? "s" : ""}</span>
+          </div>
+          <hr className="feature-page-rule" style={{ marginBottom: 0 }} />
+          <div className="explore-results">
+            {favorites.map((track, i) => (
+              <div
+                key={`fav-${track.row_index ?? i}`}
+                className="explore-track-card"
+              >
+                {track.artwork_url ? (
+                  <img
+                    className="explore-track-art"
+                    src={track.artwork_url}
+                    alt={track.name}
+                    loading="lazy"
+                  />
+                ) : (
+                  <div className="explore-track-art-placeholder">♪</div>
+                )}
+                <p className="explore-track-name">{track.name}</p>
+                <p className="explore-track-artist">{track.artist}</p>
+                <div className="explore-track-actions">
+                  {track.preview_url && (
+                    <button
+                      className={`explore-track-btn ${
+                        playContext.index === i && playContext.type === "favorites"
+                          ? "explore-track-btn--active"
+                          : ""
+                      }`}
+                      onClick={() => handlePlayFavorite(i)}
+                    >
+                      {playContext.index === i && playContext.type === "favorites"
+                        ? "▶ playing"
+                        : "▶ play"}
+                    </button>
+                  )}
+                  <button
+                    className="explore-track-btn explore-track-btn--active"
+                    onClick={() => {
+                      // if this track is currently playing, stop it
+                      if (playContext.type === "favorites" && playContext.index === i) {
+                        setPlayContext({ type: "favorites", index: null });
+                      }
+                      toggleFavorite(track);
+                    }}
+                  >
+                    ♥ saved
+                  </button>
+                </div>
+              </div>
+            ))}
+          </div>
         </div>
       )}
 

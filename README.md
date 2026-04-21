@@ -1,222 +1,83 @@
-
 # dscvr
-[DSCVR](dscvr.vercel.app) - Music Recommendation by [Victor Pyne Jr](pyne.dev)
+[dscvr.vercel.app](https://dscvr.vercel.app) — built by [victor pyne jr](https://pyne.dev)
 
-## Key Features & Benefits
+*"No great discovery was ever made without a bold guess."*
 
-DSCVR is a music recommendation system designed to discover new music tailored to your preferences. Key features include:
+---
 
--   **Personalized Recommendations:** Generates personalized recommendations using cosine similarity over audio and metadata feature embeddings.
--   **Genre-Based Exploration:** Explore music based on predefined genres such as Alt-R&B, R&B, and Soul.
--   **User-Friendly Interface:** A React-based frontend provides an intuitive platform for interacting with the recommendation system.
--   **Data-Driven Approach:** Utilizes processed music data to refine and enhance recommendation accuracy.
+dscvr is a music self-discovery platform. not a playlist generator. not a "what's popular" feed. six distinct tools designed to help you understand your relationship with music — why you listen, not just what to listen to next.
 
-## [Get started with the DSCVR webapp here.](dscvr.vercel.app)
+---
 
-Select a genre, explore curated tracks, and receive recommendations powered by a machine learning-based similarity model trained on Last.fm data.
-Or, see below to run DSCVR locally on your machine.
+## the six tools
 
-## System Architecture
+### explore *(start here)*
+classic recommendation mode. enter a song or artist you love and dscvr surfaces 12 tracks with similar sonic and emotional DNA — pulled from a catalog of 17,000+ songs and scored via cosine similarity over audio feature embeddings. heart tracks you want to remember; they're saved to your session in a dedicated saved tracks area.
 
-DSCVR consists of:
-- A Python-based backend that performs ETL, preprocessing, and recommendation inference
-- A REST API exposing recommendation endpoints
-- A React frontend that consumes the API and presents results in a responsive UI
+### soundtrack your life
+describe a moment, mood, or scene in plain language — *"a late drive home after something goes wrong"*, *"the feeling right before everything changes"* — and dscvr interprets it through Gemini and returns a curated set of tracks that fit the scene. heart the ones that land. a summary card at the end collects everything you saved.
 
-## Prerequisites & Dependencies
+### blind taste test
+a listening identity test. tracks play with all identifying information hidden — no artist, no title, no album art. just sound. you rate each one, and at the end dscvr reveals who made what. it's a direct confrontation with the gap between what you think you like and what you actually respond to.
 
-Before you begin, ensure you have the following installed:
+### the time machine
+explore the intersection of music history and your taste. pick a song or era and dscvr contextualizes it historically — surfacing what was happening in the world when it was made, and what else was being created in that same moment.
 
--   **Node.js:**  (Required for the frontend)
-    -   Download from: [https://nodejs.org/](https://nodejs.org/)
+### algorithmic capture
+a diagnostic tool. dscvr analyzes your inputs and measures how homogenized your taste has become — how much of what you listen to sounds the same, sits in the same corner of genre space. then it finds your escape routes: tracks that are adjacent enough to feel familiar but different enough to matter.
 
--   **Python:** (Required for the backend)
-    -   Download from: [https://www.python.org/](https://www.python.org/)
+### the séance
+pick a deceased artist. dscvr summons their living successors — artists making music today that carries the same spirit, technique, or emotional register. powered by Gemini's understanding of lineage and influence, not just metadata similarity. a summary card names the original artist and the threads connecting them to what came after.
 
--   **npm:** (Node Package Manager, usually installed with Node.js)
+---
 
-The following dependencies are required:
+## how it works
 
-**Python:**
+dscvr is built on a catalog of ~17,500 songs sourced from Last.fm and processed into a 50-dimensional audio feature space. recommendations are generated using cosine similarity over that space via a `CosineRecommender` model trained on the full catalog.
 
--   Specific Python libraries are detailed in the `backend/src/recsys` files. Install them from `backend/requirements.txt` (or inspect the code and install manually).
+preview audio is resolved in real-time via the Deezer API (with YouTube fallback), so every track in every feature is playable — no expired links, no silent cards.
 
-**JavaScript:**
+the more context-dependent features (soundtrack, séance, algorithmic capture) layer Google Gemini on top of the similarity engine to interpret natural language, reason about history and influence, and generate the summaries you see on results cards.
 
--   React
--   Vite
--   ESLint
--   Tailwind CSS
+---
 
-You can install the JavaScript dependencies using npm:
-```bash
-cd frontend
-npm install
-```
+## stack
 
-## Installation & Setup Instructions
+**frontend** — React + Vite, custom CSS (no component library), TikTok-style vertical scroll for track previews
 
-Follow these steps to set up and run the DSCVR project:
+**backend** — Python / FastAPI, deployed on Fly.io
 
-1.  **Clone the Repository:**
+**ML** — cosine similarity over Last.fm audio feature embeddings; `SearchIndex` for fast ANN lookup
 
-    ```bash
-    git clone <repository_url>
-    cd dscvr
-    ```
+**AI** — Google Gemini for natural language interpretation, historical context, and artist lineage reasoning
 
-2.  **Set up the Python Backend:**
+**audio** — Deezer API for real-time preview resolution; YouTube as fallback
 
-    -   Navigate to the backend directory:
-        ```bash
-        cd backend
-        ```
-    -   Install the required Python packages:
-        ```bash
-        pip install -r requirements.txt
-        # Otherwise, install dependencies according to the code in backend/src/recsys/etl_lastfm.py,
-        # backend/src/recsys/preprocess.py and backend/src/recsys/service/api.py
-        ```
+---
 
-3.  **Set up the React Frontend:**
-
-    -   Navigate to the frontend directory:
-        ```bash
-        cd frontend
-        ```
-    -   Install the required JavaScript packages:
-        ```bash
-        npm install
-        ```
-
-4.  **Configure Environment Variables (if applicable):**
-
-    -   If the project requires environment variables, create a `.env` file in the appropriate directory (e.g., `frontend/` or the root directory).
-    -   Define the necessary variables in the `.env` file.
-
-## Usage Examples & API Documentation
-
-### Backend Usage:
-
--   The main logic resides in `backend/src/recsys`. See the `etl_lastfm.py`, `preprocess.py`, and `recommenders/` subdirectories for the ETL process, data preprocessing and different recommendation algorithms.
--   The API can be started via `backend/src/recsys/service/api.py`. The API is defined using `schemas.py`.
--   Run backend scripts and services from inside the `backend/` directory so Python can resolve the `src` package.
-
-### Frontend Usage:
-
-1.  **Start the Development Server:**
-
-    ```bash
-    cd frontend
-    npm run dev
-    ```
-
-    This will start the React development server, usually on `http://localhost:5173/`.
-
-2.  **Access the Application:**
-
-    -   Open your web browser and navigate to the address provided by the development server.
-
-## Project Structure
+## system architecture
 
 ```
-├── backend/
-│   ├── .dockerignore
-│   ├── Dockerfile
-│   ├── fly.toml
-│   ├── requirements.txt
-│   ├── src/
-│   │   ├── cli/
-│   │   └── recsys/
-│   └── data/
-│       ├── artifacts/
-│       ├── processed/
-│       └── seeds/
-├── frontend/
-│   ├── .gitignore
-│   ├── README.md
-│   ├── eslint.config.js
-│   └── index.html
-├── README.md
-├── gitignore
-├── venv/
-└── web/
-
+frontend/          React app (Vite)
+backend/
+  src/recsys/
+    service/
+      api.py                   FastAPI endpoints
+      features/                one module per dscvr tool
+        explore.py
+        soundtrack.py
+        blind_taste_test.py
+        time_machine.py
+        algorithmic_capture.py
+        seance.py
+      preview_resolver.py      real-time audio URL resolution
+    recommenders/
+      cosine.py                similarity model
+    data/
+      artifacts/               trained model + feature matrix
+      processed/               catalog metadata
 ```
 
-### Important Files:
+---
 
--   **`README.md`:**  (This file) Provides an overview of the project and instructions for setup and usage.
--   **`backend/Dockerfile`:** Container build for the backend API.
--   **`backend/fly.toml`:** Fly.io deployment config for the backend.
--   **`backend/requirements.txt`:** Python dependencies for the backend.
--   **`frontend/README.md`:**  Frontend-specific instructions and information.
--   **`frontend/index.html`:** The main HTML file for the React application.
--   **`frontend/eslint.config.js`:** ESLint configuration for code linting in the frontend.
-
-**Backend Files**
-
-- `backend/src/recsys/etl_lastfm.py`: ETL process to load data from LastFM.
-- `backend/src/recsys/preprocess.py`: Preprocesses music data for the recommendation system.
-- `backend/src/recsys/recommenders/base.py`: Base class for recommendation algorithms.
-- `backend/src/recsys/recommenders/cosine.py`: Implements the cosine similarity based recommender.
-- `backend/src/recsys/io.py`: Input/Output utilities.
-- `backend/src/recsys/service/schemas.py`: Schemas for the API.
-- `backend/src/recsys/service/api.py`: Defines the API endpoints using the schemas.
-
-## Configuration Options
-
--   The React frontend can be configured by modifying the `frontend/src/main.jsx` file.
--   The backend can be configured by modifying the files in `backend/src/recsys`, primarily `etl_lastfm.py`, `preprocess.py` and `api.py`.
-
-## Contributing Guidelines
-
-We welcome contributions to DSCVR! To contribute, please follow these guidelines:
-
-1.  **Fork the Repository:**
-
-    -   Create your own fork of the DSCVR repository on GitHub.
-
-2.  **Create a Branch:**
-
-    -   Create a new branch in your fork for your feature or bug fix:
-        ```bash
-        git checkout -b feature/your-feature-name
-        ```
-
-3.  **Make Changes:**
-
-    -   Implement your changes, ensuring that the code is well-documented and follows the project's coding standards.
-
-4.  **Test Your Changes:**
-
-    -   Test your changes thoroughly to ensure they work as expected and do not introduce any new issues.
-
-5.  **Commit Your Changes:**
-
-    -   Commit your changes with a clear and descriptive commit message:
-        ```bash
-        git commit -m "Add: Your descriptive commit message"
-        ```
-
-6.  **Push to Your Fork:**
-
-    -   Push your changes to your fork on GitHub:
-        ```bash
-        git push origin feature/your-feature-name
-        ```
-
-7.  **Create a Pull Request:**
-
-    -   Create a pull request from your branch to the main branch of the DSCVR repository.
-    -   Provide a detailed description of your changes and the problem they solve.
-
-## License Information
-
-This project does not have a specified license.  All rights are reserved unless otherwise specified.
-
-## Acknowledgments
-
--   This project utilizes data from Last.fm.
--   The React frontend is built using the Vite build tool.
--   Tailwind CSS is used for styling.
+*© victor pyne jr. all rights reserved.*

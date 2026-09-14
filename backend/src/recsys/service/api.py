@@ -78,15 +78,33 @@ def build_track_key(title: str, artist: str) -> str:
 
 
 # ── Load artifacts once at startup ────────────────────────────────────────────
-recommender = CosineRecommender()
-try:
-    tracks_df = load_tracks_dataframe()
-    if len(tracks_df) != len(recommender.id_map):
-        tracks_df = pd.DataFrame(recommender.id_map)
-except Exception:
-    tracks_df = pd.DataFrame(recommender.id_map)
+# IMPORTANT: none of this may raise at import time. If it does, uvicorn never
+# binds the port and Fly reports "instance refused connection on 0.0.0.0:8080"
+# with no useful app logs. Instead we load defensively, log loudly, and let the
+# process come up so /health responds and the real failure is visible.
+logging.basicConfig(
+    level=logging.INFO,
+    format="%(asctime)s %(levelname)s %(name)s: %(message)s",
+)
 
-SEARCH_INDEX = SearchIndex(tracks_df)
+STARTUP_ERROR: str | None = None
+recommender: CosineRecommender | None = None
+tracks_df: pd.DataFrame = pd.DataFrame(columns=["title", "artist"])
+SEARCH_INDEX: SearchIndex = SearchIndex(tracks_df)
+
+try:
+    recommender = CosineRecommender()
+    try:
+        tracks_df = load_tracks_dataframe()
+        if len(tracks_df) != len(recommender.id_map):
+            tracks_df = pd.DataFrame(recommender.id_map)
+    except Exception:
+        tracks_df = pd.DataFrame(recommender.id_map)
+    SEARCH_INDEX = SearchIndex(tracks_df)
+    log.info("Startup OK: loaded %d tracks", len(tracks_df))
+except Exception as exc:  # pragma: no cover - defensive boot guard
+    STARTUP_ERROR = f"{type(exc).__name__}: {exc}"
+    log.exception("STARTUP FAILED to load recommender/artifacts: %s", STARTUP_ERROR)
 
 
 # ─── Helpers ──────────────────────────────────────────────────────────────────
@@ -168,7 +186,11 @@ async def _register_user_if_present(x_user_id: str | None) -> None:
 
 @app.get("/health")
 def health():
-    return {"ok": True, "tracks": len(tracks_df)}
+    return {
+        "ok": STARTUP_ERROR is None,
+        "tracks": len(tracks_df),
+        "startup_error": STARTUP_ERROR,
+    }
 
 
 # ─── Search ───────────────────────────────────────────────────────────────────

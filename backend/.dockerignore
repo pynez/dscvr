@@ -30,7 +30,11 @@ __pycache__/
 dist/
 build/
 
-# Data: include only artifacts + seeds needed at runtime
+# Data: include only artifacts + seeds needed at runtime.
+# Re-include the directories themselves as well as their contents, otherwise
+# some builders won't descend into an excluded dir to pick the files back up.
 data/*
+!data/artifacts
 !data/artifacts/**
+!data/seeds
 !data/seeds/**

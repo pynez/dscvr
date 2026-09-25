@@ -12,7 +12,7 @@ dscvr is a music self-discovery platform. not a playlist generator. not a "what'
 ## the six tools
 
 ### explore *(start here)*
-classic recommendation mode. enter a song or artist you love and dscvr surfaces 12 tracks with similar sonic and emotional DNA — pulled from a catalog of 17,000+ songs and scored via cosine similarity over audio feature embeddings. heart tracks you want to remember; they're saved to your session in a dedicated saved tracks area.
+classic recommendation mode. enter a song or artist you love and dscvr surfaces 12 tracks with similar sonic and emotional DNA — pulled from a catalog of 30,000+ songs and scored via cosine similarity over audio feature embeddings. heart tracks you want to remember; they're saved to your session in a dedicated saved tracks area.
 
 ### soundtrack your life
 describe a moment, mood, or scene in plain language — *"a late drive home after something goes wrong"*, *"the feeling right before everything changes"* — and dscvr interprets it through Gemini and returns a curated set of tracks that fit the scene. heart the ones that land. a summary card at the end collects everything you saved.

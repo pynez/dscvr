@@ -120,7 +120,7 @@ def _simplify_title(text: str) -> str:
 # -----------------------------
 # Last.fm low-level
 # -----------------------------
-def _lastfm(params: dict) -> dict:
+def _lastfm(params: dict, retries: int = 4) -> dict:
     load_dotenv()
     k = os.getenv("LASTFM_API_KEY")
     if not k:
@@ -129,28 +129,44 @@ def _lastfm(params: dict) -> dict:
     q = {"api_key": k, "format": "json", **params}
     headers = {"User-Agent": "dscvr/0.2 (contact: pynej001@umn.edu)"}
 
-    r = requests.get(LASTFM, params=q, headers=headers, timeout=20)
-    try:
-        r.raise_for_status()
-    except requests.HTTPError as e:
-        raise RuntimeError(f"Last.fm HTTP {r.status_code}: {r.text[:300]}") from e
+    last_exc: Optional[Exception] = None
+    for attempt in range(retries + 1):
+        try:
+            r = requests.get(LASTFM, params=q, headers=headers, timeout=20)
+        except requests.RequestException as e:
+            last_exc = e
+            if attempt < retries:
+                time.sleep(0.5 * (2**attempt))
+                continue
+            raise RuntimeError(f"Last.fm request failed: {e}") from e
 
-    ctype = r.headers.get("Content-Type", "")
-    if "json" not in ctype.lower():
-        snippet = (r.text or "")[:300]
-        raise RuntimeError(
-            f"Last.fm returned non-JSON (Content-Type={ctype}). First 300 chars:\n{snippet}"
-        )
+        if r.status_code in (429, 500, 502, 503, 504) and attempt < retries:
+            time.sleep(1.0 * (2**attempt))
+            continue
 
-    if not r.text.strip():
-        raise RuntimeError(
-            f"Last.fm returned empty body for params={params}. Status={r.status_code}"
-        )
+        try:
+            r.raise_for_status()
+        except requests.HTTPError as e:
+            raise RuntimeError(f"Last.fm HTTP {r.status_code}: {r.text[:300]}") from e
 
-    data = r.json()
-    if isinstance(data, dict) and data.get("error"):
-        raise RuntimeError(f"Last.fm error {data['error']}: {data.get('message')}")
-    return data
+        ctype = r.headers.get("Content-Type", "")
+        if "json" not in ctype.lower():
+            snippet = (r.text or "")[:300]
+            raise RuntimeError(
+                f"Last.fm returned non-JSON (Content-Type={ctype}). First 300 chars:\n{snippet}"
+            )
+
+        if not r.text.strip():
+            raise RuntimeError(
+                f"Last.fm returned empty body for params={params}. Status={r.status_code}"
+            )
+
+        data = r.json()
+        if isinstance(data, dict) and data.get("error"):
+            raise RuntimeError(f"Last.fm error {data['error']}: {data.get('message')}")
+        return data
+
+    raise RuntimeError(f"Last.fm request failed after retries: {last_exc}")
 
 
 def _cached_lastfm(prefix: str, key: str, params: dict) -> dict:
@@ -185,11 +201,14 @@ def _deezer_artwork(
     seen_ids: set = set()
 
     def _search(term: str, limit: int) -> list[dict]:
-        r = requests.get(
-            DEEZER,
-            params={"q": term, "limit": limit},
-            timeout=15,
-        )
+        try:
+            r = requests.get(
+                DEEZER,
+                params={"q": term, "limit": limit},
+                timeout=15,
+            )
+        except requests.RequestException:
+            return []
         if r.status_code != 200:
             return []
         try:
@@ -254,17 +273,20 @@ def _itunes_preview(title: str, artist: str) -> tuple[Optional[str], Optional[st
     seen_ids: set = set()
 
     def _search(term: str, limit: int) -> list[dict]:
-        r = requests.get(
-            ITUNES,
-            params={
-                "term": term,
-                "media": "music",
-                "entity": "musicTrack",
-                "limit": limit,
-                "country": "US",
-            },
-            timeout=15,
-        )
+        try:
+            r = requests.get(
+                ITUNES,
+                params={
+                    "term": term,
+                    "media": "music",
+                    "entity": "musicTrack",
+                    "limit": limit,
+                    "country": "US",
+                },
+                timeout=15,
+            )
+        except requests.RequestException:
+            return []
         if r.status_code != 200:
             return []
         try:
@@ -424,6 +446,25 @@ def geo_get_top_tracks(country: str, page: int = 1, limit: int = 50) -> list[dic
     return out
 
 
+def tag_get_top_tracks(tag: str, page: int = 1, limit: int = 50) -> list[dict]:
+    res = _cached_lastfm(
+        "tag_top_tracks",
+        f"{tag}_p{page}_l{limit}",
+        {"method": "tag.getTopTracks", "tag": tag, "page": page, "limit": limit},
+    )
+    tracks = ((res.get("tracks") or {}).get("track")) or []
+    if isinstance(tracks, dict):
+        tracks = [tracks]
+
+    out: list[dict] = []
+    for t in tracks:
+        title = t.get("name") or ""
+        artist = (t.get("artist") or {}).get("name") or ""
+        if title and artist:
+            out.append({"title": title, "artist": artist, "source": f"tag:{tag}:p{page}"})
+    return out
+
+
 def track_get_similar(title: str, artist: str, limit: int = 20) -> list[dict]:
     """
     Best-effort similar lookup.
@@ -544,20 +585,36 @@ def collect_candidates(
     countries: list[str] | None = None,
     geo_pages: int = 5,
     seed_dir: Path | None = None,
+    tag_pages: dict[str, int] | None = None,
     sleep_s: float = 0.05,
 ) -> pd.DataFrame:
     rows: list[dict] = []
 
     # charts
     for p in range(1, chart_pages + 1):
-        rows.extend(chart_get_top_tracks(page=p, limit=chart_limit))
+        try:
+            rows.extend(chart_get_top_tracks(page=p, limit=chart_limit))
+        except Exception as e:
+            print(f"[collect_candidates] WARNING chart page {p}: {e}")
         time.sleep(sleep_s)
 
     # geo
     countries = countries or ["United States", "United Kingdom", "Canada", "Australia"]
     for c in countries:
         for p in range(1, geo_pages + 1):
-            rows.extend(geo_get_top_tracks(country=c, page=p, limit=chart_limit))
+            try:
+                rows.extend(geo_get_top_tracks(country=c, page=p, limit=chart_limit))
+            except Exception as e:
+                print(f"[collect_candidates] WARNING geo {c} page {p}: {e}")
+            time.sleep(sleep_s)
+
+    # genre tags (fills gaps chart/geo skew toward mainstream pop/hiphop)
+    for tag, pages in (tag_pages or {}).items():
+        for p in range(1, pages + 1):
+            try:
+                rows.extend(tag_get_top_tracks(tag, page=p, limit=chart_limit))
+            except Exception as e:
+                print(f"[collect_candidates] WARNING tag {tag} page {p}: {e}")
             time.sleep(sleep_s)
 
     # seeds (optional)
@@ -635,9 +692,12 @@ def enrich_candidates(
     df: pd.DataFrame,
     sleep_s: float = 0.05,
     itunes: bool = True,
+    checkpoint_path: Path | None = None,
+    checkpoint_every: int = 1000,
 ) -> pd.DataFrame:
     rows: list[TrackRow] = []
-    for _, r in df.iterrows():
+    total = len(df)
+    for i, (_, r) in enumerate(df.iterrows(), start=1):
         title = str(r["title"])
         artist = str(r["artist"])
         source = str(r.get("source", "unknown"))
@@ -645,16 +705,35 @@ def enrich_candidates(
         if pd.isna(seed_group):
             seed_group = None
 
-        tags = list(
-            dict.fromkeys(
-                track_get_tags_cached(title, artist, "track")
-                + track_get_tags_cached(title, artist, "artist")
+        track_cache_hit = (
+            LASTFM_CACHE / f"track_tags_{_safe_key(f'track:{artist}:{title}')}.json"
+        ).exists()
+        artist_cache_hit = (
+            LASTFM_CACHE / f"artist_tags_{_safe_key(f'artist:{artist}')}.json"
+        ).exists()
+        itunes_cache_hit = (
+            ITUNES_CACHE / f"itunes_{_safe_key(f'{artist}:{title}')}.json"
+        ).exists()
+
+        try:
+            tags = list(
+                dict.fromkeys(
+                    track_get_tags_cached(title, artist, "track")
+                    + track_get_tags_cached(title, artist, "artist")
+                )
             )
-        )
+        except Exception as e:
+            print(f"[enrich_candidates] WARNING tags failed for {artist} - {title}: {e}")
+            tags = []
 
         prev, art = (None, None)
         if itunes:
-            prev, art = _cached_itunes_preview(title, artist)
+            try:
+                prev, art = _cached_itunes_preview(title, artist)
+            except Exception as e:
+                print(
+                    f"[enrich_candidates] WARNING itunes failed for {artist} - {title}: {e}"
+                )
 
         genre, conf = label_primary_genre(tags)
 
@@ -673,7 +752,17 @@ def enrich_candidates(
                 genre_confidence=conf,
             )
         )
-        time.sleep(sleep_s)
+
+        if not (track_cache_hit and artist_cache_hit and (not itunes or itunes_cache_hit)):
+            time.sleep(sleep_s)
+
+        if checkpoint_path is not None and i % checkpoint_every == 0:
+            partial = pd.DataFrame([x.__dict__ for x in rows])
+            partial = partial.drop_duplicates(subset=["title", "artist"]).reset_index(
+                drop=True
+            )
+            partial.to_parquet(checkpoint_path, index=False)
+            print(f"[enrich_candidates] checkpoint {i}/{total} -> {checkpoint_path}")
 
     out = pd.DataFrame([x.__dict__ for x in rows])
     out = out.drop_duplicates(subset=["title", "artist"]).reset_index(drop=True)
@@ -686,25 +775,33 @@ def build_lastfm_dataset(
     geo_pages: int = 5,
     countries: list[str] | None = None,
     seed_dir: Path | None = SEEDS,
+    tag_pages: dict[str, int] | None = None,
     expand_similar: bool = True,
     similar_per_track: int = 3,
     similar_max_new: int = 3000,
     sleep_s: float = 0.05,
     itunes: bool = True,
+    checkpoint_every: int = 1000,
 ) -> str:
     """
     Scalable catalog builder:
-      1) Collect candidates from chart + geo (+ optional seeds)
+      1) Collect candidates from chart + geo + genre tags (+ optional seeds)
       2) Optional: expand via track.getSimilar
       3) Enrich with cached tags + cached iTunes preview/artwork
       4) Label primary_genre via tags
       5) Write parquet
+    Checkpoints to out_path every `checkpoint_every` enriched rows so a long
+    run survives a transient crash without losing progress.
     """
+    out_path = Path(out_path)
+    out_path.parent.mkdir(parents=True, exist_ok=True)
+
     candidates = collect_candidates(
         chart_pages=chart_pages,
         geo_pages=geo_pages,
         countries=countries,
         seed_dir=seed_dir,
+        tag_pages=tag_pages,
         sleep_s=sleep_s,
     )
     if candidates.empty:
@@ -718,10 +815,14 @@ def build_lastfm_dataset(
             sleep_s=sleep_s,
         )
 
-    df = enrich_candidates(candidates, sleep_s=sleep_s, itunes=itunes)
+    df = enrich_candidates(
+        candidates,
+        sleep_s=sleep_s,
+        itunes=itunes,
+        checkpoint_path=out_path,
+        checkpoint_every=checkpoint_every,
+    )
 
-    out_path = Path(out_path)
-    out_path.parent.mkdir(parents=True, exist_ok=True)
     df.to_parquet(out_path, index=False)
 
     print(f"✅ Wrote {len(df)} rows → {out_path}")

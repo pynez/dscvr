@@ -1,5 +1,5 @@
 # dscvr
-[dscvr.vercel.app](https://dscvr.vercel.app) — built by [victor pyne jr](https://pyne.dev)
+[dscvr.pyne.dev](https://dscvr.pyne.dev) — built by [victor pyne jr](https://pyne.dev)
 
 *"No great discovery was ever made without a bold guess."*
 

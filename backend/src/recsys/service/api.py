@@ -7,6 +7,7 @@ from pathlib import Path
 
 # Load .env before anything reads os.environ — no-op in production (Fly.io injects secrets directly)
 from dotenv import load_dotenv
+
 load_dotenv(Path(__file__).parents[3] / ".env")  # backend/.env
 
 import pandas as pd
@@ -48,6 +49,7 @@ origins = [
     "http://localhost:5173",
     "http://localhost:5174",
     "https://dscvr.vercel.app",
+    "https://dscvr.pyne.dev",
 ]
 
 app.add_middleware(
@@ -109,6 +111,7 @@ except Exception as exc:  # pragma: no cover - defensive boot guard
 
 # ─── Helpers ──────────────────────────────────────────────────────────────────
 
+
 class SearchResult(BaseModel):
     row_index: int
     title: str
@@ -150,7 +153,9 @@ def resolve_track(req: RecommendRequest) -> tuple[int, float]:
             raise HTTPException(status_code=404, detail="Song not found in catalog.")
 
     if not req.query:
-        raise HTTPException(status_code=400, detail="Missing query or track identifier.")
+        raise HTTPException(
+            status_code=400, detail="Missing query or track identifier."
+        )
 
     best_idx, best_score, candidate_idxs = SEARCH_INDEX.match(
         req.query, limit=SEARCH_LIMIT
@@ -176,6 +181,7 @@ async def _register_user_if_present(x_user_id: str | None) -> None:
     if not x_user_id:
         return
     from src.recsys.service import db
+
     try:
         await asyncio.to_thread(db.register_user, x_user_id)
     except Exception as exc:
@@ -183,6 +189,7 @@ async def _register_user_if_present(x_user_id: str | None) -> None:
 
 
 # ─── Health ───────────────────────────────────────────────────────────────────
+
 
 @app.get("/health")
 def health():
@@ -194,6 +201,7 @@ def health():
 
 
 # ─── Search ───────────────────────────────────────────────────────────────────
+
 
 @app.get("/search", response_model=SearchResponse)
 def search(q: str = Query(..., alias="q"), limit: int = SEARCH_LIMIT):
@@ -208,16 +216,20 @@ def search(q: str = Query(..., alias="q"), limit: int = SEARCH_LIMIT):
 
 # ─── Classic Recommendation ───────────────────────────────────────────────────
 
+
 @app.post("/recommend", response_model=RecommendResponse)
 async def recommend(req: RecommendRequest):
     idx, _score = resolve_track(req)
     try:
         recs = recommender.similar_by_index(idx, top_k=req.top_k)
     except Exception as exc:
-        raise HTTPException(status_code=500, detail="Failed to compute recommendations.") from exc
+        raise HTTPException(
+            status_code=500, detail="Failed to compute recommendations."
+        ) from exc
 
     # preview_resolver strips DRM iTunes URLs and replaces them with Deezer MP3s
     from src.recsys.service.preview_resolver import resolve_batch
+
     enriched = await resolve_batch(recs)
 
     resolved = tracks_df.iloc[idx]
@@ -234,6 +246,7 @@ async def recommend(req: RecommendRequest):
 
 
 # ─── Interactions ─────────────────────────────────────────────────────────────
+
 
 @app.post("/interactions", status_code=204)
 async def log_interaction(req: InteractionRequest):
@@ -261,6 +274,7 @@ async def log_interaction(req: InteractionRequest):
 
 # ─── Feature 1: Soundtrack Your Life ──────────────────────────────────────────
 
+
 @app.post("/soundtrack", response_model=SoundtrackResponse)
 async def soundtrack(
     req: SoundtrackRequest,
@@ -282,6 +296,7 @@ async def soundtrack(
 
 # ─── Feature 2: Blind Taste Test ──────────────────────────────────────────────
 
+
 @app.get("/blind-taste-test", response_model=BlindTasteTestResponse)
 async def blind_taste_test(x_user_id: str | None = Header(default=None)):
     await _register_user_if_present(x_user_id)
@@ -297,16 +312,24 @@ async def blind_taste_test(x_user_id: str | None = Header(default=None)):
     for t in result["tracks"]:
         idx = t["row_index"]
         row = recommender.id_map[idx]
-        meta = recommender.meta_df.iloc[idx] if recommender.meta_df is not None else None
-        name = (meta.get("title") if hasattr(meta, "get") else None) or row.get("title", "")
-        artist = (meta.get("artist") if hasattr(meta, "get") else None) or row.get("artist", "")
-        resolve_input.append({
-            "row_index": idx,
-            "name": name,
-            "artist": artist,
-            "preview_url": t.get("preview_url"),
-            "artwork_url": None,
-        })
+        meta = (
+            recommender.meta_df.iloc[idx] if recommender.meta_df is not None else None
+        )
+        name = (meta.get("title") if hasattr(meta, "get") else None) or row.get(
+            "title", ""
+        )
+        artist = (meta.get("artist") if hasattr(meta, "get") else None) or row.get(
+            "artist", ""
+        )
+        resolve_input.append(
+            {
+                "row_index": idx,
+                "name": name,
+                "artist": artist,
+                "preview_url": t.get("preview_url"),
+                "artwork_url": None,
+            }
+        )
 
     enriched = await resolve_batch(resolve_input)
 
@@ -332,6 +355,7 @@ async def blind_reveal(req: BlindRevealRequest):
 
 
 # ─── Feature 3: Time Machine ──────────────────────────────────────────────────
+
 
 @app.post("/time-machine", response_model=TimeMachineResponse)
 async def time_machine(
@@ -360,6 +384,7 @@ async def time_machine(
 
 # ─── Feature 4: Algorithmic Capture ───────────────────────────────────────────
 
+
 @app.get("/algorithmic-capture", response_model=AlgorithmicCaptureResponse)
 async def algorithmic_capture(
     user_id: str = Query(...),
@@ -374,6 +399,7 @@ async def algorithmic_capture(
 
 
 # ─── Feature 5: The Séance ────────────────────────────────────────────────────
+
 
 @app.post("/seance", response_model=SeanceResponse)
 async def seance(
